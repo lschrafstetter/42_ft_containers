@@ -30,7 +30,7 @@ struct iterator_traits {
 
 // Pointer specialization
 template <typename T>
-struct iterator_traits<T *> {
+struct iterator_traits<T*> {
   typedef std::ptrdiff_t difference_type;
   typedef T value_type;
   typedef T* pointer;
@@ -40,7 +40,7 @@ struct iterator_traits<T *> {
 
 // Const pointer specialization
 template <typename T>
-struct iterator_traits<const T *> {
+struct iterator_traits<const T*> {
   typedef std::ptrdiff_t difference_type;
   typedef T value_type;
   typedef T* pointer;
@@ -56,9 +56,11 @@ template <class Iterator>
 class reverse_iterator {
   typedef Iterator iterator_type;
 
-  typedef typename std::iterator_traits<iterator_type>::iterator_category iterator_category;
+  typedef typename std::iterator_traits<iterator_type>::iterator_category
+      iterator_category;
   typedef typename std::iterator_traits<iterator_type>::value_type value_type;
-  typedef typename std::iterator_traits<iterator_type>::difference_type difference_type;
+  typedef typename std::iterator_traits<iterator_type>::difference_type
+      difference_type;
   typedef typename std::iterator_traits<iterator_type>::pointer pointer;
   typedef typename std::iterator_traits<iterator_type>::reference reference;
 
@@ -68,35 +70,27 @@ class reverse_iterator {
   //**************************************************
 
   reverse_iterator() : current(iterator_type()){};
-  explicit reverse_iterator(iterator_type x) 
-      : current(iterator_type(x)) {};
+  explicit reverse_iterator(iterator_type x) : current(iterator_type(x)){};
   template <class U>
-  reverse_iterator(const reverse_iterator<U>& other)
-      : current(other.current) {};
-  
+  reverse_iterator(const reverse_iterator<U>& other) : current(other.current){};
+
   //**************************************************
   // Operator overloads
   //**************************************************
 
   // Assignment operator
-  template<class U>
+  template <class U>
   reverse_iterator& operator=(const reverse_iterator<U>& other) {
     this->current = other.current;
     return *this;
   };
 
   // Access operators
-  reference operator*() const {
-    return current[-1];
-  };
+  reference operator*() const { return current[-1]; };
 
-  pointer operator->() const {
-    return &(operator*());
-  };
+  pointer operator->() const { return &(operator*()); };
 
-  reference operator[](difference_type n) const {
-    return current[- n - 1];
-  };
+  reference operator[](difference_type n) const { return current[-n - 1]; };
 
   // Arithmetic operators
   reverse_iterator& operator++() {
@@ -210,9 +204,62 @@ struct is_integral<unsigned long long> : public true_type {};
 // ft::equal
 //////////////////////////////////////////////////////////////////////////////
 
+// https://en.cppreference.com/w/cpp/algorithm/equal
+template <class InputIt1, class InputIt2>
+bool equal(InputIt1 first1, InputIt1 last1, InputIt2 first2) {
+  for (; first1 != last1; ++first1, ++first2) {
+    if (!(*first1 == *first2)) {
+      return false;
+    }
+  }
+  return true;
+};
+
+// https://en.cppreference.com/w/cpp/algorithm/equal
+// BinaryPredicate: bool pred(const Type1 &a, const Type2 &b);
+template <class InputIt1, class InputIt2, class BinaryPredicate>
+bool equal(InputIt1 first1, InputIt1 last1, InputIt2 first2,
+           BinaryPredicate p) {
+  for (; first1 != last1; ++first1, ++first2) {
+    if (!p(*first1, *first2)) {
+      return false;
+    }
+  }
+  return true;
+};
+
 //////////////////////////////////////////////////////////////////////////////
 // ft::lexicographical_compare
 //////////////////////////////////////////////////////////////////////////////
+
+// https://en.cppreference.com/w/cpp/algorithm/lexicographical_compare
+// returns true if the first range is lexicographically less, otherwise false
+// (void) in front of ++first2 to not generate a "unused variable" warning
+template <class InputIt1, class InputIt2>
+bool lexicographical_compare(InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                             InputIt2 last2) {
+  for (; (first1 != last1) && (first2 != last2); ++first1, (void)++first2) {
+    if (*first1 < *first2) return true;
+    if (*first2 < *first1) return false;
+  }
+
+  return (first1 == last1) && (first2 != last2);
+};
+
+// https://en.cppreference.com/w/cpp/algorithm/lexicographical_compare
+// returns true if the first range is lexicographically less, otherwise false
+// Compare: bool cmp(const Type1 &a, const Type2 &b);
+// (void) in front of ++first2 to not generate a "unused variable" warning
+template <class InputIt1, class InputIt2, class Compare>
+bool lexicographical_compare(InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                             InputIt2 last2, Compare comp) {
+  for (; (first1 != last1) && (first2 != last2); ++first1, (void)++first2) {
+    if (comp(*first1, *first2)) return true;
+    if (comp(*first2, *first1)) return false;
+  }
+
+  return (first1 == last1) && (first2 != last2);
+};
 
 //////////////////////////////////////////////////////////////////////////////
 // ft::pair
@@ -224,4 +271,4 @@ struct is_integral<unsigned long long> : public true_type {};
 
 }  // namespace ft
 
-#endif // UTILITIES_H
+#endif  // UTILITIES_H
