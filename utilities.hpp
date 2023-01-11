@@ -67,12 +67,12 @@ class reverse_iterator {
   // Constructors
   //**************************************************
 
-  reverse_iterator() : base(iterator_type()){};
+  reverse_iterator() : current(iterator_type()){};
   explicit reverse_iterator(iterator_type x) 
-      : base(iterator_type(x)) {};
+      : current(iterator_type(x)) {};
   template <class U>
   reverse_iterator(const reverse_iterator<U>& other)
-      : base(other.base) {};
+      : current(other.current) {};
   
   //**************************************************
   // Operator overloads
@@ -81,13 +81,13 @@ class reverse_iterator {
   // Assignment operator
   template<class U>
   reverse_iterator& operator=(const reverse_iterator<U>& other) {
-    this->base = other.base;
+    this->current = other.current;
     return *this;
   };
 
   // Access operators
   reference operator*() const {
-    return base[-1];
+    return current[-1];
   };
 
   pointer operator->() const {
@@ -95,20 +95,65 @@ class reverse_iterator {
   };
 
   reference operator[](difference_type n) const {
-    return base[- n - 1];
+    return current[- n - 1];
   };
 
   // Arithmetic operators
-  
+  reverse_iterator& operator++() {
+    --current;
+    return *this;
+  };
+
+  reverse_iterator& operator--() {
+    ++current;
+    return *this;
+  };
+
+  reverse_iterator operator++(int) {
+    iterator_type tmp(current);
+    --current;
+    return tmp;
+  };
+
+  reverse_iterator operator--(int) {
+    iterator_type tmp(current);
+    ++current;
+    return tmp;
+  };
+
+  reverse_iterator operator+(difference_type n) const {
+    return this->operator[](n);
+  };
+
+  reverse_iterator operator-(difference_type n) const {
+    return this->operator[](-n);
+  };
+
+  reverse_iterator& operator+=(difference_type n) {
+    current -= n;
+    return *this;
+  };
+
+  reverse_iterator& operator-=(difference_type n) {
+    current += n;
+    return *this;
+  };
+
+  //**************************************************
+  // Functions
+  //**************************************************
+
+  iterator_type base() { return current; };
 
  protected:
-  iterator_type base;
+  iterator_type current;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 // ft::enable_if
 //////////////////////////////////////////////////////////////////////////////
 
+// https://eli.thegreenplace.net/2014/sfinae-and-enable_if/
 template <bool, typename T = void>
 struct enable_if {};
 
