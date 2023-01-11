@@ -72,7 +72,7 @@ class reverse_iterator {
   reverse_iterator() : current(iterator_type()){};
   explicit reverse_iterator(iterator_type x) : current(iterator_type(x)){};
   template <class U>
-  reverse_iterator(const reverse_iterator<U>& other) : current(other.current){};
+  reverse_iterator(const reverse_iterator<U>& other) : current(other.current) {}
 
   //**************************************************
   // Operator overloads
@@ -83,7 +83,7 @@ class reverse_iterator {
   reverse_iterator& operator=(const reverse_iterator<U>& other) {
     this->current = other.current;
     return *this;
-  };
+  }
 
   // Access operators
   reference operator*() const { return current[-1]; };
@@ -195,10 +195,11 @@ template <>
 struct is_integral<long> : public true_type {};
 template <>
 struct is_integral<unsigned long> : public true_type {};
-template <>
-struct is_integral<long long> : public true_type {};
-template <>
-struct is_integral<unsigned long long> : public true_type {};
+// C++98 doesn't support long long types
+// template <>
+// struct is_integral<long long> : public true_type {};
+// template <>
+// struct is_integral<unsigned long long> : public true_type {};
 
 //////////////////////////////////////////////////////////////////////////////
 // ft::equal
@@ -213,7 +214,7 @@ bool equal(InputIt1 first1, InputIt1 last1, InputIt2 first2) {
     }
   }
   return true;
-};
+}
 
 // https://en.cppreference.com/w/cpp/algorithm/equal
 // BinaryPredicate: bool pred(const Type1 &a, const Type2 &b);
@@ -226,48 +227,132 @@ bool equal(InputIt1 first1, InputIt1 last1, InputIt2 first2,
     }
   }
   return true;
-};
+}
 
 //////////////////////////////////////////////////////////////////////////////
 // ft::lexicographical_compare
 //////////////////////////////////////////////////////////////////////////////
 
-// https://en.cppreference.com/w/cpp/algorithm/lexicographical_compare
 // returns true if the first range is lexicographically less, otherwise false
-// (void) in front of ++first2 to not generate a "unused variable" warning
 template <class InputIt1, class InputIt2>
 bool lexicographical_compare(InputIt1 first1, InputIt1 last1, InputIt2 first2,
                              InputIt2 last2) {
-  for (; (first1 != last1) && (first2 != last2); ++first1, (void)++first2) {
+  while ((first1 != last1) && (first2 != last2)) {
     if (*first1 < *first2) return true;
     if (*first2 < *first1) return false;
+    ++first1;
+    ++first2;
   }
-
+  // Checks if one or both ranges go on.
+  // Both end: return false (first is not smaller, because they are equal)
+  // First ends, second goes on: return true (first is smaller)
+  // First goes on, second ends: return false (second is smaller)
   return (first1 == last1) && (first2 != last2);
-};
+}
 
 // https://en.cppreference.com/w/cpp/algorithm/lexicographical_compare
 // returns true if the first range is lexicographically less, otherwise false
 // Compare: bool cmp(const Type1 &a, const Type2 &b);
-// (void) in front of ++first2 to not generate a "unused variable" warning
 template <class InputIt1, class InputIt2, class Compare>
 bool lexicographical_compare(InputIt1 first1, InputIt1 last1, InputIt2 first2,
                              InputIt2 last2, Compare comp) {
-  for (; (first1 != last1) && (first2 != last2); ++first1, (void)++first2) {
+  while ((first1 != last1) && (first2 != last2)) {
     if (comp(*first1, *first2)) return true;
     if (comp(*first2, *first1)) return false;
+    ++first1;
+    ++first2;
   }
-
+  // Checks if one or both ranges go on.
+  // Both end: return false (first is not smaller, because they are equal)
+  // First ends, second goes on: return true (first is smaller)
+  // First goes on, second ends: return false (second is smaller)
   return (first1 == last1) && (first2 != last2);
-};
+}
 
 //////////////////////////////////////////////////////////////////////////////
 // ft::pair
 //////////////////////////////////////////////////////////////////////////////
 
+template <class T1, class T2>
+struct pair {
+  typedef T1 first_type;
+  typedef T2 second_type;
+
+ public:
+  //**************************************************
+  // Constructors
+  //**************************************************
+
+  pair(){};
+  pair(const first_type& x, const second_type& y) : first(x), second(y){};
+  pair(const pair& p) : first(p.first), second(p.second){};
+
+  //**************************************************
+  // Operator overloads
+  //**************************************************
+
+  // Assignment operator
+  pair& operator=(const pair& other) {
+    this->first = other.first;
+    this->second = other.second;
+    return *this;
+  };
+
+  //**************************************************
+  // Member objects
+  //**************************************************
+
+  first_type first;
+  second_type second;
+};
+
+//**************************************************
+// Non-member operator overloads pertaining ft::pair
+//**************************************************
+
+template <class T1, class T2>
+bool operator==(const ft::pair<T1, T2>& lhs, const ft::pair<T1, T2>& rhs) {
+  return (lhs.first == rhs.first) && (lhs.second == rhs.second);
+}
+
+template <class T1, class T2>
+bool operator!=(const ft::pair<T1, T2>& lhs, const ft::pair<T1, T2>& rhs) {
+  return !(lhs == rhs);
+}
+
+template <class T1, class T2>
+bool operator<(const ft::pair<T1, T2>& lhs, const ft::pair<T1, T2>& rhs) {
+  // Only if the member "first" of the first pair is not smaller, the second
+  // gets compared
+  return lhs.first < rhs.first ||
+         (!(rhs.first < lhs.first) && lhs.second < rhs.second);
+}
+
+template <class T1, class T2>
+bool operator<=(const ft::pair<T1, T2>& lhs, const ft::pair<T1, T2>& rhs) {
+  // lhs and rhs are "switched" so the already defined "<" can be used
+  return !(rhs < lhs);
+}
+
+template <class T1, class T2>
+bool operator>(const ft::pair<T1, T2>& lhs, const ft::pair<T1, T2>& rhs) {
+  // lhs and rhs are "switched" so the already defined "<" can be used
+  return rhs < lhs;
+}
+
+template <class T1, class T2>
+bool operator>=(const ft::pair<T1, T2>& lhs, const ft::pair<T1, T2>& rhs) {
+  return !(lhs < rhs);
+}
+
 //////////////////////////////////////////////////////////////////////////////
 // ft::make_pair
 //////////////////////////////////////////////////////////////////////////////
+
+template <class T1, class T2>
+ft::pair<T1, T2> make_pair(T1 t, T2 u) {
+  return ft::pair(t, u);
+}
 
 }  // namespace ft
 
