@@ -29,14 +29,14 @@ class vector {
 
   // Basic
   vector()
-      : start_(NULL),
+      : allocator_(allocator_type()),
+        start_(NULL),
         finish_(NULL),
-        end_of_storage_(NULL),
-        allocator_(allocator_type()) {}
+        end_of_storage_(NULL) {}
 
   // Custom allocator
   explicit vector(const allocator_type& alloc)
-      : start_(NULL), finish_(NULL), end_of_storage_(NULL), allocator_(alloc) {}
+      : allocator_(alloc), start_(NULL), finish_(NULL), end_of_storage_(NULL) {}
 
   // Constructor sets initial size, all with one value
   explicit vector(size_type count, const value_type& value = value_type(),
@@ -74,6 +74,7 @@ class vector {
 
   // Copy assignment operator
   vector& operator=(const vector& other) {
+    std::cout << "copy assignment operator called" << std::endl;
     if (*this != other) {
       size_type size_other = other.size();
       destroy(start_, finish_);
@@ -81,7 +82,7 @@ class vector {
         deallocate_all();
         initialize_vector_with_range(other.begin(), other.end());
       } else {
-        std::copy(other.begin(), other.end(), this.begin());
+        std::copy(other.begin(), other.end(), this->begin());
         end_of_storage_ = start_ + size_other;
       }
     }
@@ -285,8 +286,15 @@ class vector {
 //**************************************************
 
 template <class T, class Alloc>
+bool operator==(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
+  if (lhs.size() != rhs.size())
+    return false;
+  return equal(lhs.begin(), lhs.end(), rhs.begin());
+}
+
+template <class T, class Alloc>
 bool operator!=(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
-  return !(equal(lhs.begin(), lhs.end(), rhs.begin()));
+  return !(lhs == rhs);
 }
 
 }  // namespace ft
