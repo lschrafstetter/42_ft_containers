@@ -210,8 +210,8 @@ struct is_integral<unsigned long> : public true_type {};
 // https://en.cppreference.com/w/cpp/algorithm/equal
 template <class InputIt1, class InputIt2>
 bool equal(InputIt1 first1, InputIt1 last1, InputIt2 first2) {
-  for (; first1 != last1; ++first1, ++first2) {
-    if (!(*first1 == *first2)) {
+  while (first1 != last1) {
+    if (!(*(first1++) == *(first2++))) {
       return false;
     }
   }
@@ -223,8 +223,8 @@ bool equal(InputIt1 first1, InputIt1 last1, InputIt2 first2) {
 template <class InputIt1, class InputIt2, class BinaryPredicate>
 bool equal(InputIt1 first1, InputIt1 last1, InputIt2 first2,
            BinaryPredicate p) {
-  for (; first1 != last1; ++first1, ++first2) {
-    if (!p(*first1, *first2)) {
+  while (first1 != last1) {
+    if (!p(*(first1++), *(first2++))) {
       return false;
     }
   }
