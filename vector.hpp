@@ -24,6 +24,122 @@ class vector {
   typedef Iterator<const value_type> const_iterator;
 
   //**************************************************
+  // Constructors
+  //**************************************************
+
+  // Basic
+  vector()
+      : start_(NULL),
+        finish_(NULL),
+        end_of_storage_(NULL),
+        allocator_(allocator_type()) {}
+
+  // Custom allocator
+  explicit vector(const allocator_type& alloc)
+      : start_(NULL), finish_(NULL), end_of_storage_(NULL), allocator_(alloc) {}
+
+  // Constructor sets initial size, all with one value
+  explicit vector(size_type count, const value_type& value = value_type(),
+                  const allocator_type& alloc = allocator_type())
+      : allocator_(alloc) {
+    initialize_vector_with_value(count, value);
+  }
+
+  // Range initialization with Iterators
+  template <class InputIt>
+  explicit vector(
+      typename ft::enable_if<!std::numeric_limits<InputIt>::is_integer,
+                             InputIt>::type first,
+      InputIt last, const allocator_type& alloc = allocator_type())
+      : allocator_(alloc) {
+    initialize_vector_with_range(first, last);
+  }
+
+  // Copy constructor
+  vector(const vector& other) : allocator_(allocator_type()) {
+    initialize_vector_with_range(other.begin(), other.end());
+  }
+
+  // Destructor
+  ~vector() {
+    if (start_) {
+      clear();
+      deallocate_all();
+    }
+  }
+
+  //**************************************************
+  // Operator overloads
+  //**************************************************
+
+  // Copy assignment operator
+  vector& operator=(const vector& other) {
+    if (*this != other) {
+      size_type size_other = other.size();
+      destroy(start_, finish_);
+      if (capacity() < size_other) {
+        deallocate_all();
+        initialize_vector_with_range(other.begin(), other.end());
+      } else {
+        std::copy(other.begin(), other.end(), this.begin());
+        end_of_storage_ = start_ + size_other;
+      }
+    }
+    return *this;
+  }
+
+  //**************************************************
+  // Member functions
+  //**************************************************
+
+  // General functions
+  void assign(size_type count, const T& value) {
+    clear();
+    deallocate_all();
+    initialize_vector_with_value(count, value);
+  }
+
+  /* template< class InputIt >
+  void assign(InputIt first, InputIt last) {} */
+
+  allocator_type get_allocator() const { return allocator_; }
+
+  // Element access
+  reference operator[](size_type pos) { return *(start_ + pos); }
+  const_reference operator[](size_type pos) const { return *(start_ + pos); }
+
+  // Iterators
+  iterator begin() { return iterator(start_); }
+  const_iterator begin() const { return const_iterator(start_); }
+  iterator end() { return iterator(end_of_storage_); }
+  const_iterator end() const { return const_iterator(end_of_storage_); }
+
+  // Capacity functions
+  bool empty() const { return start_ == end_of_storage_; }
+  size_type size() const { return end_of_storage_ - start_; }
+  size_type max_size() const {
+    return std::numeric_limits<difference_type>::max();
+  }
+  // void reserve(size_type new_cap);
+  size_type capacity() const { return finish_ - start_; }
+
+  // Modifiers
+  void clear() {
+    destroy(start_, end_of_storage_);
+    end_of_storage_ = start_;
+  }
+  // iterator insert( const_iterator pos, const T& value ) {}
+  // iterator insert( const_iterator pos, size_type count, const T& value ) {}
+  /* template< class InputIt >
+  iterator insert( const_iterator pos, InputIt first, InputIt last ) {} */
+  // iterator erase( iterator pos ) {}
+  // iterator erase( iterator first, iterator last ) {}
+  // void push_back( const T& value ) {}
+  // void pop_back() {}
+  // void resize( size_type count ) {}
+  // void swap( vector& other ) {}
+
+  //**************************************************
   // Iterators
   //**************************************************
 
@@ -89,115 +205,15 @@ class vector {
       return data_ != other.data_;
     }
 
-    // Implicit conversion to const_iterator
-    operator Iterator<const T> () const {
-      return Iterator<const T>(this->data_);
+    // Implicit conversion to const_iterator (e.g. when making const iterator of
+    // non-const vector)
+    operator Iterator<const value_type>() const {
+      return Iterator<const value_type>(this->data_);
     }
 
    protected:
     pointer data_;
   };
-
-  //**************************************************
-  // Constructors
-  //**************************************************
-
-  // Basic
-  vector() : start_(NULL), finish_(NULL), end_of_storage_(NULL) {}
-
-  // Custom allocator
-  explicit vector(const allocator_type& alloc)
-      : start_(NULL), finish_(NULL), end_of_storage_(NULL), allocator_(alloc) {}
-
-  // Constructor sets initial size, all with one value
-  explicit vector(size_type count, const value_type& value = value_type(),
-                  const allocator_type& alloc = allocator_type())
-      : allocator_(alloc) {
-    allocate_and_fill(count, value);
-  }
-
-  // Range initialization with Iterators
-  /* template <class InputIt = iterator, enable_if<std::is_same<InputIt,
-  iterator>::value> > vector(InputIt first, InputIt last, const Allocator& alloc
-  = Allocator()) {
-
-  } */
-
-  // Copy constructor
-  /* vector( const vector& other ) {
-
-  } */
-
-  // Destructor
-  ~vector() {
-    if (start_) {
-      clear();
-      deallocate_all();
-    }
-  }
-
-  //**************************************************
-  // Operator overloads
-  //**************************************************
-
-  // Copy assignment operator
-  vector& operator=(const vector& other) {
-    if (*this != other) {
-      destroy(start_, finish_);
-      deallocate_all();
-      allocate(other.size());
-    }
-    return *this;
-  }
-
-  //**************************************************
-  // Member functions
-  //**************************************************
-
-  // General functions
-  void assign(size_type count, const T& value) {
-    clear();
-    deallocate_all();
-    allocate_and_fill(count, value);
-  }
-  /* template< class InputIt >
-  void assign(InputIt first, InputIt last) {} */
-  allocator_type get_allocator() const { return allocator_; }
-
-  // Element access
-  reference operator[](size_type pos) { return *(start_ + pos); }
-  const_reference operator[](size_type pos) const { return *(start_ + pos); }
-
-  // Iterators
-  iterator begin() { return iterator(start_); }
-  const_iterator begin() const { return const_iterator(start_); }
-  iterator end() { return iterator(end_of_storage_); }
-  const_iterator end() const { return const_iterator(end_of_storage_); }
-
-  // Capacity functions
-  bool empty() const { return start_ == end_of_storage_; }
-  size_type size() const { return end_of_storage_ - start_; }
-  size_type max_size() const {
-    return std::numeric_limits<difference_type>::max();
-  }
-  // void reserve(size_type new_cap);
-  size_type capacity() const { return finish_ - start_; }
-
-  // Modifiers
-  void clear() {
-    destroy(start_, end_of_storage_);
-    end_of_storage_ = start_;
-  }
-  // iterator insert( const_iterator pos, const T& value ) {}
-  // iterator insert( const_iterator pos, size_type count, const T& value ) {}
-  /* template< class InputIt >
-  iterator insert( const_iterator pos, InputIt first, InputIt last ) {} */
-  // iterator erase( iterator pos ) {}
-  // iterator erase( iterator first, iterator last ) {}
-  // void push_back( const T& value ) {}
-  // void pop_back() {}
-  // void resize( size_type count ) {}
-  // void swap( vector& other ) {}
 
  private:
   //**************************************************
@@ -213,11 +229,30 @@ class vector {
   // General helper functions
   //**************************************************
 
-  void allocate_and_fill(size_type count, const value_type& value) {
+  void initialize_vector_with_value(size_type count, const value_type& value) {
     start_ = allocate(count);
     finish_ = start_ + count;
     std::uninitialized_fill_n(start_, count, value);
     end_of_storage_ = finish_;
+  }
+
+  template <class InputIt>
+  void initialize_vector_with_range(const InputIt& it1, const InputIt& it2) {
+    size_type size = it2 - it1;
+    start_ = allocate(size);
+    uninitialized_copy_n(it1, size, start_);
+    end_of_storage_ = start_ + size;
+    finish_ = end_of_storage_;
+  }
+
+  template <class InputIt>
+  void uninitialized_copy_n(InputIt first, size_type n, pointer start) {
+    for (unsigned int i = 0; i < n; i++) {
+      construct(start, *first);
+      //*start = *first;
+      start++;
+      first++;
+    }
   }
 
   //**************************************************
@@ -240,11 +275,20 @@ class vector {
 
   void destroy(pointer first, pointer last) {
     while (first != last) {
-      allocator_.destroy(first);
-      ++first;
+      allocator_.destroy(first++);
     }
   }
 };
+
+//**************************************************
+// Non-member overloads
+//**************************************************
+
+template <class T, class Alloc>
+bool operator!=(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
+  return !(equal(lhs.begin(), lhs.end(), rhs.begin()));
+}
+
 }  // namespace ft
 
 #endif  // VECTOR_H
