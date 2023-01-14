@@ -8,6 +8,8 @@
 // ft::lexicographical_compare
 // ft::pair
 // ft::make_pair
+// other helpers:
+// ft::is_same
 //////////////////////////////////////////////////////////////////////////////
 
 #ifndef UTILITIES_H
@@ -353,6 +355,27 @@ template <class T1, class T2>
 ft::pair<T1, T2> make_pair(T1 t, T2 u) {
   return ft::pair<T1, T2>(t, u);
 }
+
+//////////////////////////////////////////////////////////////////////////////
+// ft::is_same
+//////////////////////////////////////////////////////////////////////////////
+
+// https://en.cppreference.com/w/cpp/types/is_same
+template <typename T, typename U>
+struct is_same : public false_type {};
+
+template <typename T>
+struct is_same<T, T> : public true_type {};
+
+//////////////////////////////////////////////////////////////////////////////
+// ft::is_const
+//////////////////////////////////////////////////////////////////////////////
+
+template <class T>
+struct is_const : false_type {};
+
+template <class T>
+struct is_const<const T> : true_type {};
 
 }  // namespace ft
 
