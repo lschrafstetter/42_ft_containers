@@ -106,13 +106,13 @@ class reverse_iterator {
   };
 
   reverse_iterator operator++(int) {
-    iterator_type tmp(current);
+    reverse_iterator<iterator_type> tmp(current);
     --current;
     return tmp;
   };
 
   reverse_iterator operator--(int) {
-    iterator_type tmp(current);
+    reverse_iterator<iterator_type> tmp(current);
     ++current;
     return tmp;
   };
