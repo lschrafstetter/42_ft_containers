@@ -2,6 +2,7 @@
 #define VECTOR_H
 #include <limits>
 #include <memory>
+#include <stdexcept>
 #include "utilities.hpp"
 
 namespace ft {
@@ -22,6 +23,8 @@ class vector {
   typedef const value_type& const_reference;
   typedef Iterator<value_type> iterator;
   typedef Iterator<const value_type> const_iterator;
+  typedef ft::reverse_iterator<iterator> reverse_iterator;
+  typedef ft::reverse_iterator<const_iterator> const_reverse_iterator;
 
   //**************************************************
   // Constructors
@@ -62,10 +65,8 @@ class vector {
 
   // Destructor
   ~vector() {
-    if (start_) {
-      clear();
-      deallocate_all();
-    }
+    clear();
+    deallocate_all();
   }
 
   //**************************************************
@@ -73,16 +74,23 @@ class vector {
   //**************************************************
 
   // Copy assignment operator
+  // 3 Cases:
+  // 1) current capacity is too low
+  // 2) capacity is enough, but other.size() > this.size() => just copy other
+  // 3) capacity is enough and other.size() <= this.size() => copy, then destroy
+  // "leftovers"
   vector& operator=(const vector& other) {
-    std::cout << "copy assignment operator called" << std::endl;
     if (*this != other) {
       size_type size_other = other.size();
-      destroy(start_, finish_);
-      if (capacity() < size_other) {
-        deallocate_all();
+      if (this->capacity() < size_other) {
+        this->~vector();
         initialize_vector_with_range(other.begin(), other.end());
       } else {
         std::copy(other.begin(), other.end(), this->begin());
+        if (other.size() < this->size()) {
+          // if you have "left over objects" of *this, destroy them
+          destroy(start_ + this->size(), end_of_storage_);
+        }
         end_of_storage_ = start_ + size_other;
       }
     }
@@ -94,20 +102,51 @@ class vector {
   //**************************************************
 
   // General functions
+
+  // See copy assignment
   void assign(size_type count, const T& value) {
-    clear();
-    deallocate_all();
-    initialize_vector_with_value(count, value);
+    if (this->capacity() < count) {
+      this->~vector();
+      initialize_vector_with_value(count, value);
+    } else {
+      for (unsigned int i = 0; i < count; i++) (*this)[i] = value;
+      if (count < this->size()) destroy(start_ + count, end_of_storage_);
+      end_of_storage_ = start_ + count;
+    }
   }
 
-  /* template< class InputIt >
-  void assign(InputIt first, InputIt last) {} */
+  template <class InputIt>
+  void assign(typename ft::enable_if<!std::numeric_limits<InputIt>::is_integer,
+                                     InputIt>::type first,
+              InputIt last) {
+    size_type count = last - first;
+    if (this->capacity() < count) {
+      this->~vector();
+      initialize_vector_with_range(first, last);
+    } else {
+      std::copy(first, last, this->begin());
+      if (count < this->size()) destroy(start_ + count, end_of_storage_);
+      end_of_storage_ = start_ + count;
+    }
+  }
 
   allocator_type get_allocator() const { return allocator_; }
 
   // Element access
+  reference at(size_type pos) {
+    if (pos >= this->size())
+      throw std::out_of_range("pos out of range in vector::at(size_type pos)");
+    return start_[pos];
+  }
+  const_reference at(size_type pos) const { return this->at(pos); }
   reference operator[](size_type pos) { return *(start_ + pos); }
   const_reference operator[](size_type pos) const { return *(start_ + pos); }
+  reference front() { return *start_; }
+  const_reference front() const { return *start_; }
+  reference back() { return *(end_of_storage_ - 1); }
+  const_reference back() const { return *(end_of_storage_ - 1); }
+  pointer data() { return start_; }
+  const_pointer data() const { return start_; }
 
   // Iterators
   iterator begin() { return iterator(start_); }
@@ -115,13 +154,36 @@ class vector {
   iterator end() { return iterator(end_of_storage_); }
   const_iterator end() const { return const_iterator(end_of_storage_); }
 
+  /* rbegin, rend*/
+  reverse_iterator rbegin() { return reverse_iterator(end_of_storage_); }
+  const_reverse_iterator rbegin() const { return reverse_iterator(end_of_storage_); }
+  reverse_iterator rend() { return reverse_iterator(start_); }
+  const_reverse_iterator rend() const { return reverse_iterator(start_); }
+
   // Capacity functions
+
   bool empty() const { return start_ == end_of_storage_; }
+
   size_type size() const { return end_of_storage_ - start_; }
+
   size_type max_size() const {
     return std::numeric_limits<difference_type>::max();
   }
-  // void reserve(size_type new_cap);
+
+  void reserve(size_type new_cap) {
+    if (new_cap > this->max_size())
+      throw std::length_error("new_cap exceeded size in vector::reserve()");
+    size_type size = this->size();
+    if (new_cap > size) {
+      pointer tmp = allocate(new_cap);
+      std::copy(this->begin(), this->end(), iterator(tmp));
+      this->~vector();
+      start_ = tmp;
+      finish_ = start_ + new_cap;
+      end_of_storage_ = start_ + size;
+    }
+  }
+
   size_type capacity() const { return finish_ - start_; }
 
   // Modifiers
@@ -129,19 +191,62 @@ class vector {
     destroy(start_, end_of_storage_);
     end_of_storage_ = start_;
   }
+
   // iterator insert( const_iterator pos, const T& value ) {}
   // iterator insert( const_iterator pos, size_type count, const T& value ) {}
   /* template< class InputIt >
   iterator insert( const_iterator pos, InputIt first, InputIt last ) {} */
   // iterator erase( iterator pos ) {}
   // iterator erase( iterator first, iterator last ) {}
-  // void push_back( const T& value ) {}
-  // void pop_back() {}
-  // void resize( size_type count ) {}
-  // void swap( vector& other ) {}
+
+  void push_back(const value_type& value) {
+    size_type size = this->size();
+    size_type capacity = this->capacity();
+    if (size == capacity) {
+    }
+  }
+
+  void pop_back() {
+    if (this->size()) {
+      destroy(start_ + this->size(), end_of_storage_);
+      end_of_storage_--;
+    }
+  }
+
+  // Three cases:
+  // 1) size < count and capacity < count: reallocate memory
+  // 2) size < count and capacity >= count: just fill with value
+  // 3) size > count: erase all "leftover" objects
+  void resize(size_type count, value_type value = value_type()) {
+    size_type size = this->size();
+    if (size < count) {
+      if (this->capacity() < count) {
+        pointer tmp = allocate(count);
+        std::copy(this->begin(), this->end(), iterator(tmp));
+        for (unsigned int i = size; i < count; i++) tmp[i] = value;
+        this->~vector();
+        start_ = tmp;
+        end_of_storage_ = start_ + count;
+        finish_ = end_of_storage_;
+      } else {
+        for (unsigned int i = size; i < count; i++) (*this)[i] = value;
+        end_of_storage_ = start_ + count;
+      }
+    } else if (size > count) {
+      destroy(start_ + count, end_of_storage_);
+      end_of_storage_ = start_ + count;
+    }
+  }
+
+  void swap(vector& other) {
+    std::swap(this->allocator_, other.allocator_);
+    std::swap(this->start_, other.start_);
+    std::swap(this->finish_, other.finish_);
+    std::swap(this->end_of_storage_, other.end_of_storage_);
+  }
 
   //**************************************************
-  // Iterators
+  // Iterator class
   //**************************************************
 
   template <typename datatype>
@@ -250,9 +355,8 @@ class vector {
   void uninitialized_copy_n(InputIt first, size_type n, pointer start) {
     for (unsigned int i = 0; i < n; i++) {
       construct(start, *first);
-      //*start = *first;
-      start++;
-      first++;
+      ++start;
+      ++first;
     }
   }
 
@@ -287,8 +391,7 @@ class vector {
 
 template <class T, class Alloc>
 bool operator==(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
-  if (lhs.size() != rhs.size())
-    return false;
+  if (lhs.size() != rhs.size()) return false;
   return equal(lhs.begin(), lhs.end(), rhs.begin());
 }
 
