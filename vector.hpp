@@ -4,6 +4,7 @@
 #include <memory>
 #include <stdexcept>
 #include "utilities.hpp"
+#include "iterator_vector.hpp"
 
 namespace ft {
 
@@ -21,8 +22,8 @@ class vector {
   typedef typename Allocator::const_pointer const_pointer;
   typedef value_type& reference;
   typedef const value_type& const_reference;
-  typedef Iterator<value_type> iterator;
-  typedef Iterator<const value_type> const_iterator;
+  typedef Iterator_vector<value_type> iterator;
+  typedef Iterator_vector<const value_type> const_iterator;
   typedef ft::reverse_iterator<iterator> reverse_iterator;
   typedef ft::reverse_iterator<const_iterator> const_reverse_iterator;
 
@@ -127,7 +128,7 @@ class vector {
       std::copy(first, last, this->begin());
       if (count < this->size()) destroy(start_ + count, end_of_storage_);
       end_of_storage_ = start_ + count;
-    }
+    } 
   }
 
   allocator_type get_allocator() const { return allocator_; }
@@ -138,7 +139,11 @@ class vector {
       throw std::out_of_range("pos out of range in vector::at(size_type pos)");
     return start_[pos];
   }
-  const_reference at(size_type pos) const { return this->at(pos); }
+  const_reference at(size_type pos) const {
+    if (pos >= this->size())
+      throw std::out_of_range("pos out of range in vector::at(size_type pos)");
+    return start_[pos];
+  }
   reference operator[](size_type pos) { return *(start_ + pos); }
   const_reference operator[](size_type pos) const { return *(start_ + pos); }
   reference front() { return *start_; }
@@ -156,7 +161,9 @@ class vector {
 
   /* rbegin, rend*/
   reverse_iterator rbegin() { return reverse_iterator(end_of_storage_); }
-  const_reverse_iterator rbegin() const { return reverse_iterator(end_of_storage_); }
+  const_reverse_iterator rbegin() const {
+    return reverse_iterator(end_of_storage_);
+  }
   reverse_iterator rend() { return reverse_iterator(start_); }
   const_reverse_iterator rend() const { return reverse_iterator(start_); }
 
@@ -167,7 +174,7 @@ class vector {
   size_type size() const { return end_of_storage_ - start_; }
 
   size_type max_size() const {
-    return std::numeric_limits<difference_type>::max();
+    return allocator_.max_size();
   }
 
   void reserve(size_type new_cap) {
@@ -202,8 +209,13 @@ class vector {
   void push_back(const value_type& value) {
     size_type size = this->size();
     size_type capacity = this->capacity();
-    if (size == capacity) {
+    if (!start_) {
+      initialize_vector_with_value(1, value);
+      return;
     }
+    if (size == capacity) reserve(capacity * 2);
+    start_[size] = value;
+    end_of_storage_++;
   }
 
   void pop_back() {
@@ -244,82 +256,6 @@ class vector {
     std::swap(this->finish_, other.finish_);
     std::swap(this->end_of_storage_, other.end_of_storage_);
   }
-
-  //**************************************************
-  // Iterator class
-  //**************************************************
-
-  template <typename datatype>
-  class Iterator {
-   public:
-    typedef std::random_access_iterator_tag iterator_category;
-    typedef datatype value_type;
-    typedef datatype* pointer;
-    typedef datatype& reference;
-    typedef std::ptrdiff_t difference_type;
-
-    // Constructors
-    Iterator(pointer p) : data_(p) {}
-    Iterator(const Iterator& other) : data_(other.data_) {}
-
-    // Operator overloads
-    reference operator*() const { return *data_; }
-    Iterator& operator++() {
-      ++data_;
-      return *this;
-    }
-    Iterator operator++(int) {
-      Iterator tmp(*this);
-      ++data_;
-      return tmp;
-    }
-    Iterator& operator--() {
-      --data_;
-      return *this;
-    }
-    Iterator operator--(int) {
-      Iterator tmp(*this);
-      --data_;
-      return tmp;
-    }
-    Iterator& operator+=(difference_type n) {
-      data_ += n;
-      return *this;
-    }
-    Iterator operator+(difference_type n) const { return Iterator(data_ + n); }
-    Iterator& operator-=(difference_type n) {
-      data_ -= n;
-      return *this;
-    }
-    Iterator operator-(difference_type n) const { return Iterator(data_ - n); }
-    difference_type operator-(const Iterator& other) const {
-      return data_ - other.data_;
-    }
-    value_type& operator[](difference_type n) const { return data_[n]; }
-    bool operator<(const Iterator& other) const { return data_ < other.data_; }
-    bool operator>(const Iterator& other) const { return data_ > other.data_; }
-    bool operator<=(const Iterator& other) const {
-      return data_ <= other.data_;
-    }
-    bool operator>=(const Iterator& other) const {
-      return data_ >= other.data_;
-    }
-    bool operator==(const Iterator& other) const {
-      return data_ == other.data_;
-    }
-    bool operator!=(const Iterator& other) const {
-      return data_ != other.data_;
-    }
-
-    // Implicit conversion to const_iterator (e.g. when making const iterator of
-    // non-const vector)
-    operator Iterator<const value_type>() const {
-      return Iterator<const value_type>(this->data_);
-    }
-
-   protected:
-    pointer data_;
-  };
 
  private:
   //**************************************************
@@ -386,7 +322,7 @@ class vector {
 };
 
 //**************************************************
-// Non-member overloads
+// Non-member overloads of vector
 //**************************************************
 
 template <class T, class Alloc>
