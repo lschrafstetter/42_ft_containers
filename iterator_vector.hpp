@@ -8,6 +8,9 @@
 
 namespace ft {
 
+//**************************************************
+// This is a random access iterator
+//**************************************************
 template <typename datatype>
 class Iterator_vector {
  public:
@@ -17,12 +20,17 @@ class Iterator_vector {
   typedef datatype& reference;
   typedef std::ptrdiff_t difference_type;
 
-  // Constructors
+  //**************************************************
+  // Constructor
+  //**************************************************
   Iterator_vector() : data_(NULL) {}
   Iterator_vector(pointer p) : data_(p) {}
   Iterator_vector(const Iterator_vector& other) : data_(other.data_) {}
+  ~Iterator_vector() {}
 
+  //**************************************************
   // Operator overloads
+  //**************************************************
   reference operator*() const { return *data_; }
 
   Iterator_vector& operator++() {
@@ -88,8 +96,15 @@ class Iterator_vector {
     return this->data_ != other.data_;
   }
 
+  //**************************************************
   // Functions
+  //**************************************************
   pointer base() const { return data_; }
+
+
+  //**************************************************
+  // Conversion overloads
+  //**************************************************
 
   // Implicit conversion to const_iterator (e.g. when making const iterator of
   // non-const vector)
@@ -102,7 +117,7 @@ class Iterator_vector {
 };
 
 //**************************************************
-// Non-member overloads
+// Non-member operator overloads
 //**************************************************
 
 template <typename T>
