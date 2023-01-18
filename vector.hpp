@@ -198,7 +198,13 @@ class vector {
     end_of_storage_ = start_;
   }
 
-  iterator insert(const_iterator pos, const T& value) {}
+  iterator insert(const_iterator pos, const value_type& value) {
+    size_type insert_pos = pos - begin();
+
+    if (this->size() == this->capacity())
+      return insert_single_realloc(insert_pos, value);
+    return insert_single_without_realloc(insert_pos, value);
+  }
 
   // iterator insert( const_iterator pos, size_type count, const T& value ) {}
   /* template< class InputIt >
@@ -271,6 +277,52 @@ class vector {
   // General helper functions
   //**************************************************
 
+  // Helper for insert functions with single position insert
+  iterator insert_single_realloc(size_type insert_pos,
+                                 const value_type& value) {
+    size_type old_size = size();
+    size_type new_capacity = capacity() == 0 ? 1 : capacity() * 2;
+    pointer tmp = allocate(new_capacity);
+
+    // Copy values before new value into tmp
+    for (unsigned int i = 0; i < insert_pos; i++) tmp[i] = start_[i];
+
+    // Construct new value
+    construct(tmp + insert_pos, value);
+
+    // Copy values after new value into tmp
+    for (unsigned int i = insert_pos; i < old_size; i++) {
+      tmp[i + 1] = start_[i];
+    }
+
+    // Reassign attributes
+    deallocate_all();
+    start_ = tmp;
+    end_of_storage_ = start_ + old_size + 1;
+    finish_ = start_ + new_capacity;
+
+    return begin() + insert_pos;
+  }
+
+  // Helper for insert function with single position insert
+  // There is enough capacity
+  iterator insert_single_without_realloc(size_type insert_pos,
+                                         const value_type& value) {
+    // Copying from the back
+    // Copy values from end_of_storage until insert_pos
+    for (unsigned int i = size(); i > insert_pos; i--) start_[i + 1] = start_[i];
+
+    // Construct new value
+    construct(start_ + insert_pos, value);
+
+    // Copy values from insert_pos to start_
+    for (int i = insert_pos - 1; i >= 0; i--) start_[i + 1] = start_[i];
+
+    end_of_storage_++;
+    return begin() + insert_pos;
+  }
+
+  // Initializes an uninitialize vector with count elements of a value
   void initialize_vector_with_value(size_type count, const value_type& value) {
     start_ = allocate(count);
     finish_ = start_ + count;
@@ -278,15 +330,18 @@ class vector {
     end_of_storage_ = finish_;
   }
 
+  // Initializes an uninitialize vector with a range of elements
   template <class InputIt>
   void initialize_vector_with_range(const InputIt& it1, const InputIt& it2) {
-    size_type size = it2 - it1;
-    start_ = allocate(size);
-    uninitialized_copy_n(it1, size, start_);
-    end_of_storage_ = start_ + size;
+    size_type distance = it2 - it1;
+    start_ = allocate(distance);
+    uninitialized_copy_n(it1, distance, start_);
+    end_of_storage_ = start_ + distance;
     finish_ = end_of_storage_;
   }
 
+  // Constructs a range from first until first + n into the uninitialized
+  // pointer range start until start + n
   template <class InputIt>
   void uninitialized_copy_n(InputIt first, size_type n, pointer start) {
     for (unsigned int i = 0; i < n; i++) {
@@ -338,7 +393,8 @@ bool operator!=(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
 
 template <class T, class Alloc>
 bool operator<(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
-  return ft::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
+  return ft::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(),
+                                     rhs.end());
 }
 
 template <class T, class Alloc>
