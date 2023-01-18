@@ -159,8 +159,6 @@ class vector {
   const_iterator begin() const { return const_iterator(start_); }
   iterator end() { return iterator(end_of_storage_); }
   const_iterator end() const { return const_iterator(end_of_storage_); }
-
-  /* rbegin, rend*/
   reverse_iterator rbegin() { return reverse_iterator(end_of_storage_); }
   const_reverse_iterator rbegin() const {
     return reverse_iterator(end_of_storage_);
@@ -198,7 +196,7 @@ class vector {
     end_of_storage_ = start_;
   }
 
-  iterator insert(const_iterator pos, const value_type& value) {
+  iterator insert(const const_iterator& pos, const value_type& value) {
     size_type insert_pos = pos - begin();
 
     if (this->size() == this->capacity())
@@ -206,11 +204,53 @@ class vector {
     return insert_single_without_realloc(insert_pos, value);
   }
 
-  // iterator insert( const_iterator pos, size_type count, const T& value ) {}
-  /* template< class InputIt >
-  iterator insert( const_iterator pos, InputIt first, InputIt last ) {} */
-  // iterator erase( iterator pos ) {}
-  // iterator erase( iterator first, iterator last ) {}
+  iterator insert(const const_iterator& pos, size_type count,
+                  const value_type& value) {
+    size_type insert_pos = pos - begin();
+
+    if (this->size() < capacity() + count)
+      return insert_range_realloc(insert_pos, count, value);
+    return insert_range_without_realloc(insert_pos, count, value);
+  }
+
+  template <class InputIt>
+  iterator insert(
+      const const_iterator& pos,
+      typename ft::enable_if<!std::numeric_limits<InputIt>::is_integer,
+                             InputIt>::type first,
+      InputIt last) {
+    size_type insert_pos = pos - begin();
+    size_type distance = last - first;
+
+    if (this->size() < capacity() + distance)
+      return insert_range_iterator_realloc(insert_pos, first, last);
+    return insert_range_iterator_without_realloc(insert_pos, first, last);
+  }
+
+  iterator erase(const iterator& pos) {
+    if (empty()) return end();
+    size_type pos_to_remove = pos - begin();
+
+    allocator_.destroy(start_ + pos_to_remove);
+    for (unsigned int i = pos_to_remove; i < size() - 1; i++)
+      start_[i] = start_[i + 1];
+
+    end_of_storage_--;
+    return begin() + pos_to_remove;
+  }
+
+  iterator erase(const iterator& first, const iterator& last) {
+    if (empty()) return end();
+    size_type pos_to_remove = first - begin();
+    size_type distance = last - first;
+
+    destroy(first.base(), last.base());
+    for (unsigned int i = pos_to_remove; i < size() - 1; i++)
+      start_[i] = start_[i + distance];
+
+    end_of_storage_ -= distance;
+    return begin() + pos_to_remove;
+  }
 
   void push_back(const value_type& value) {
     size_type size = this->size();
@@ -277,6 +317,117 @@ class vector {
   // General helper functions
   //**************************************************
 
+  // Helper for insert function with same-value-range insert
+  template <class InputIt>
+  iterator insert_range_iterator_realloc(
+      size_type insert_pos,
+      typename ft::enable_if<!std::numeric_limits<InputIt>::is_integer,
+                             InputIt>::type& first,
+      const InputIt& last) {
+    size_type old_size = size();
+    size_type distance = last - first;
+    size_type new_capacity = old_size + distance;
+    pointer tmp = allocate(new_capacity);
+
+    // Copy values before new value into tmp
+    for (unsigned int i = 0; i < insert_pos; i++) tmp[i] = start_[i];
+
+    // Copy range
+    for (unsigned int i = insert_pos; i < insert_pos + distance; i++)
+      tmp[i] = *(first++);
+
+    // Copy remaining original array
+    for (unsigned int i = insert_pos + distance; i < old_size + distance; i++)
+      tmp[i] = start_[i - distance];
+
+    deallocate_all();
+    start_ = tmp;
+    end_of_storage_ = start_ + old_size + distance;
+    finish_ = start_ + new_capacity;
+
+    return begin() + insert_pos;
+  }
+
+  // Helper for insert function with same-value-range insert
+  template <class InputIt>
+  iterator insert_range_iterator_without_realloc(
+      size_type insert_pos,
+      typename ft::enable_if<!std::numeric_limits<InputIt>::is_integer,
+                             InputIt>::type& first,
+      const InputIt& last) {
+    size_type distance = last - first;
+
+    // Case: inserting with iterator end()
+    if (insert_pos == size()) {
+      for (; first < last; first++) push_back(*first);
+      return end() - distance;
+    }
+    size_type new_size = size() + distance;
+
+    // Copying from the back
+    // Copy values from end_of_storage until end of insert range
+    for (unsigned int i = new_size; i > insert_pos + distance; i--)
+      start_[i] = start_[i - distance];
+
+    // Construct range of new values
+    for (unsigned int i = insert_pos; i < insert_pos + distance; i++)
+      start_[i] = *(first++);
+
+    end_of_storage_ += distance;
+    return begin() + insert_pos;
+  }
+
+  // Helper for insert function with same-value-range insert
+  iterator insert_range_realloc(size_type insert_pos, size_type count,
+                                const value_type& value) {
+    size_type old_size = size();
+    size_type new_capacity = old_size + count;
+    pointer tmp = allocate(new_capacity);
+
+    // Copy values before new value into tmp
+    for (unsigned int i = 0; i < insert_pos; i++) tmp[i] = start_[i];
+
+    // Copy range
+    for (unsigned int i = insert_pos; i < insert_pos + count; i++)
+      construct(tmp + i, value);
+
+    // Copy remaining original array
+    for (unsigned int i = insert_pos + count; i < old_size + count; i++)
+      tmp[i] = start_[i - count];
+
+    deallocate_all();
+    start_ = tmp;
+    end_of_storage_ = start_ + old_size + count;
+    finish_ = start_ + new_capacity;
+
+    return begin() + insert_pos;
+  }
+
+  // Helper for insert function with same-value-range insert
+  // Enough capacity
+  iterator insert_range_without_realloc(size_type insert_pos, size_type count,
+                                        const value_type& value) {
+    // Case: inserting with iterator end()
+    if (insert_pos == size()) {
+      for (unsigned int i = 0; i < count; i++) push_back(value);
+      return end() - count;
+    }
+
+    size_type new_size = size() + count;
+
+    // Copying from the back
+    // Copy values from end_of_storage until end of insert range
+    for (unsigned int i = new_size; i > insert_pos + count; i--)
+      start_[i] = start_[i - count];
+
+    // Construct range of new values
+    for (unsigned int i = insert_pos; i < insert_pos + count; i++)
+      construct(start_ + i, value);
+
+    end_of_storage_ += count;
+    return begin() + insert_pos;
+  }
+
   // Helper for insert functions with single position insert
   iterator insert_single_realloc(size_type insert_pos,
                                  const value_type& value) {
@@ -308,15 +459,18 @@ class vector {
   // There is enough capacity
   iterator insert_single_without_realloc(size_type insert_pos,
                                          const value_type& value) {
+    // Case: inserting with iterator end()
+    if (insert_pos == size()) {
+      push_back(value);
+      return end() - 1;
+    }
     // Copying from the back
     // Copy values from end_of_storage until insert_pos
-    for (unsigned int i = size(); i > insert_pos; i--) start_[i + 1] = start_[i];
+    for (unsigned int i = size(); i > insert_pos; i--)
+      start_[i] = start_[i - 1];
 
     // Construct new value
     construct(start_ + insert_pos, value);
-
-    // Copy values from insert_pos to start_
-    for (int i = insert_pos - 1; i >= 0; i--) start_[i + 1] = start_[i];
 
     end_of_storage_++;
     return begin() + insert_pos;
