@@ -3,8 +3,8 @@
 #include <limits>
 #include <memory>
 #include <stdexcept>
-#include "utilities.hpp"
 #include "iterator_vector.hpp"
+#include "utilities.hpp"
 
 namespace ft {
 
@@ -110,7 +110,8 @@ class vector {
       this->~vector();
       initialize_vector_with_value(count, value);
     } else {
-      for (unsigned int i = 0; i < count; i++) (*this)[i] = value;
+      for (pointer p1 = start_, p2 = p1 + count; p1 != p2; p1++)
+        construct(p1, value);
       if (count < this->size()) destroy(start_ + count, end_of_storage_);
       end_of_storage_ = start_ + count;
     }
@@ -128,7 +129,7 @@ class vector {
       std::copy(first, last, this->begin());
       if (count < this->size()) destroy(start_ + count, end_of_storage_);
       end_of_storage_ = start_ + count;
-    } 
+    }
   }
 
   allocator_type get_allocator() const { return allocator_; }
@@ -173,9 +174,7 @@ class vector {
 
   size_type size() const { return end_of_storage_ - start_; }
 
-  size_type max_size() const {
-    return allocator_.max_size();
-  }
+  size_type max_size() const { return allocator_.max_size(); }
 
   void reserve(size_type new_cap) {
     if (new_cap > this->max_size())
@@ -199,7 +198,8 @@ class vector {
     end_of_storage_ = start_;
   }
 
-  // iterator insert( const_iterator pos, const T& value ) {}
+  iterator insert(const_iterator pos, const T& value) {}
+
   // iterator insert( const_iterator pos, size_type count, const T& value ) {}
   /* template< class InputIt >
   iterator insert( const_iterator pos, InputIt first, InputIt last ) {} */
@@ -214,7 +214,7 @@ class vector {
       return;
     }
     if (size == capacity) reserve(capacity * 2);
-    start_[size] = value;
+    construct(start_ + size, value);
     end_of_storage_++;
   }
 
@@ -334,6 +334,26 @@ bool operator==(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
 template <class T, class Alloc>
 bool operator!=(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
   return !(lhs == rhs);
+}
+
+template <class T, class Alloc>
+bool operator<(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
+  return ft::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
+}
+
+template <class T, class Alloc>
+bool operator>(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
+  return !(lhs < rhs || lhs == rhs);
+}
+
+template <class T, class Alloc>
+bool operator<=(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
+  return !(lhs > rhs);
+}
+
+template <class T, class Alloc>
+bool operator>=(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
+  return !(lhs < rhs);
 }
 
 }  // namespace ft
