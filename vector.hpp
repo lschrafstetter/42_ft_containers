@@ -121,7 +121,7 @@ class vector {
   void assign(typename ft::enable_if<!std::numeric_limits<InputIt>::is_integer,
                                      InputIt>::type first,
               InputIt last) {
-    size_type count = last - first;
+    size_type count = get_distance(first, last);
     if (this->capacity() < count) {
       this->~vector();
       initialize_vector_with_range(first, last);
@@ -220,7 +220,7 @@ class vector {
                              InputIt>::type first,
       InputIt last) {
     size_type insert_pos = pos - begin();
-    size_type distance = last - first;
+    size_type distance = get_distance(first, last);
 
     if (this->size() < capacity() + distance)
       return insert_range_iterator_realloc(insert_pos, first, last);
@@ -325,7 +325,7 @@ class vector {
                              InputIt>::type& first,
       const InputIt& last) {
     size_type old_size = size();
-    size_type distance = last - first;
+    size_type distance = get_distance(first, last);
     size_type new_capacity = old_size + distance;
     pointer tmp = allocate(new_capacity);
 
@@ -355,11 +355,11 @@ class vector {
       typename ft::enable_if<!std::numeric_limits<InputIt>::is_integer,
                              InputIt>::type& first,
       const InputIt& last) {
-    size_type distance = last - first;
+    size_type distance = get_distance(first, last);
 
     // Case: inserting with iterator end()
     if (insert_pos == size()) {
-      for (; first < last; first++) push_back(*first);
+      for (; first != last; first++) push_back(*first);
       return end() - distance;
     }
     size_type new_size = size() + distance;
@@ -487,7 +487,7 @@ class vector {
   // Initializes an uninitialize vector with a range of elements
   template <class InputIt>
   void initialize_vector_with_range(const InputIt& it1, const InputIt& it2) {
-    size_type distance = it2 - it1;
+    size_type distance = get_distance(it1, it2);
     start_ = allocate(distance);
     uninitialized_copy_n(it1, distance, start_);
     end_of_storage_ = start_ + distance;
@@ -503,6 +503,23 @@ class vector {
       ++start;
       ++first;
     }
+  }
+
+  /* // For random_access_iterator
+  template <class InputIt>
+  difference_type get_distance(InputIt first, InputIt last) {
+    return last - first;
+  } */
+
+  // ft::enable_if<!std::numeric_limits<InputIt>::is_integer, InputIt>::type
+  // For every other iterator
+  template <class InputIt>
+  difference_type get_distance(InputIt first, InputIt last) {
+    difference_type distance = 0;
+    while (first++ != last) {
+      distance++;
+    }
+    return distance;
   }
 
   //**************************************************
