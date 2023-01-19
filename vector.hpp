@@ -298,8 +298,17 @@ class vector {
 
   void swap(vector& other) {
     std::swap(this->allocator_, other.allocator_);
+    /* pointer tmp = this->start_;
+    this->start_ = other.start_;
+    other.start_ = tmp; */
     std::swap(this->start_, other.start_);
+    /* tmp = this->finish_;
+    this->finish_ = other.finish_;
+    other.finish_ = tmp; */
     std::swap(this->finish_, other.finish_);
+    /* tmp = this->end_of_storage_;
+    this->end_of_storage_ = other.end_of_storage_;
+    other.end_of_storage_ = tmp; */
     std::swap(this->end_of_storage_, other.end_of_storage_);
   }
 
@@ -505,16 +514,25 @@ class vector {
     }
   }
 
-  /* // For random_access_iterator
+  // For random_access_iterator
   template <class InputIt>
-  difference_type get_distance(InputIt first, InputIt last) {
+  difference_type get_distance(
+      typename ft::enable_if<
+          ft::is_same<typename ft::iterator_traits<InputIt>::iterator_category,
+                      std::random_access_iterator_tag>::value,
+          InputIt>::type first,
+      InputIt last) const {
     return last - first;
-  } */
+  }
 
-  // ft::enable_if<!std::numeric_limits<InputIt>::is_integer, InputIt>::type
   // For every other iterator
   template <class InputIt>
-  difference_type get_distance(InputIt first, InputIt last) {
+  difference_type get_distance(
+      typename ft::enable_if<
+          !ft::is_same<typename ft::iterator_traits<InputIt>::iterator_category,
+                       std::random_access_iterator_tag>::value,
+          InputIt>::type first,
+      InputIt last) {
     difference_type distance = 0;
     while (first++ != last) {
       distance++;
