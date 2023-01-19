@@ -60,8 +60,12 @@ class vector {
   }
 
   // Copy constructor
-  vector(const vector& other) : allocator_(allocator_type()) {
-    initialize_vector_with_range(other.begin(), other.end());
+  vector(const vector& other)
+      : allocator_(allocator_type()),
+        start_(NULL),
+        finish_(NULL),
+        end_of_storage_(NULL) {
+    if (other.size()) initialize_vector_with_range(other.begin(), other.end());
   }
 
   // Destructor
@@ -110,7 +114,7 @@ class vector {
       this->~vector();
       initialize_vector_with_value(count, value);
     } else {
-      for (pointer p1 = start_, p2 = p1 + count; p1 != p2; p1++)
+      for (pointer p1 = start_, p2 = p1 + count; p1 != p2; ++p1)
         construct(p1, value);
       if (count < this->size()) destroy(start_ + count, end_of_storage_);
       end_of_storage_ = start_ + count;
@@ -230,22 +234,24 @@ class vector {
   iterator erase(const iterator& pos) {
     if (empty()) return end();
     size_type pos_to_remove = pos - begin();
+    size_type size = this->size();
 
-    allocator_.destroy(start_ + pos_to_remove);
-    for (unsigned int i = pos_to_remove; i < size() - 1; i++)
+    if (!ft::is_integral<value_type>::value)
+      allocator_.destroy(start_ + pos_to_remove);
+    for (unsigned int i = pos_to_remove; i < size; ++i)
       start_[i] = start_[i + 1];
 
-    end_of_storage_--;
+    --end_of_storage_;
     return begin() + pos_to_remove;
   }
 
   iterator erase(const iterator& first, const iterator& last) {
-    if (empty()) return end();
     size_type pos_to_remove = first - begin();
     size_type distance = last - first;
+    size_type size = this->size();
 
     destroy(first.base(), last.base());
-    for (unsigned int i = pos_to_remove; i < size() - 1; i++)
+    for (unsigned int i = pos_to_remove; i < size; ++i)
       start_[i] = start_[i + distance];
 
     end_of_storage_ -= distance;
@@ -255,19 +261,16 @@ class vector {
   void push_back(const value_type& value) {
     size_type size = this->size();
     size_type capacity = this->capacity();
-    if (!start_) {
-      initialize_vector_with_value(1, value);
-      return;
-    }
-    if (size == capacity) reserve(capacity * 2);
+    if (size == capacity) reserve(std::max((size_type) 1, capacity * 2));
     construct(start_ + size, value);
-    end_of_storage_++;
+    ++end_of_storage_;
   }
 
   void pop_back() {
     if (this->size()) {
-      destroy(start_ + this->size(), end_of_storage_);
-      end_of_storage_--;
+      if (!ft::is_integral<value_type>::value)
+        allocator_.destroy(end_of_storage_ - 1);
+      --end_of_storage_;
     }
   }
 
@@ -281,13 +284,13 @@ class vector {
       if (this->capacity() < count) {
         pointer tmp = allocate(count);
         std::copy(this->begin(), this->end(), iterator(tmp));
-        for (unsigned int i = size; i < count; i++) tmp[i] = value;
+        for (unsigned int i = size; i < count; ++i) tmp[i] = value;
         this->~vector();
         start_ = tmp;
         end_of_storage_ = start_ + count;
         finish_ = end_of_storage_;
       } else {
-        for (unsigned int i = size; i < count; i++) (*this)[i] = value;
+        for (unsigned int i = size; i < count; ++i) (*this)[i] = value;
         end_of_storage_ = start_ + count;
       }
     } else if (size > count) {
@@ -339,14 +342,14 @@ class vector {
     pointer tmp = allocate(new_capacity);
 
     // Copy values before new value into tmp
-    for (unsigned int i = 0; i < insert_pos; i++) tmp[i] = start_[i];
+    for (unsigned int i = 0; i < insert_pos; ++i) tmp[i] = start_[i];
 
     // Copy range
-    for (unsigned int i = insert_pos; i < insert_pos + distance; i++)
+    for (unsigned int i = insert_pos; i < insert_pos + distance; ++i)
       tmp[i] = *(first++);
 
     // Copy remaining original array
-    for (unsigned int i = insert_pos + distance; i < old_size + distance; i++)
+    for (unsigned int i = insert_pos + distance; i < old_size + distance; ++i)
       tmp[i] = start_[i - distance];
 
     deallocate_all();
@@ -368,18 +371,18 @@ class vector {
 
     // Case: inserting with iterator end()
     if (insert_pos == size()) {
-      for (; first != last; first++) push_back(*first);
+      for (; first != last; ++first) push_back(*first);
       return end() - distance;
     }
     size_type new_size = size() + distance;
 
     // Copying from the back
     // Copy values from end_of_storage until end of insert range
-    for (unsigned int i = new_size; i > insert_pos + distance; i--)
+    for (unsigned int i = new_size; i > insert_pos + distance; --i)
       start_[i] = start_[i - distance];
 
     // Construct range of new values
-    for (unsigned int i = insert_pos; i < insert_pos + distance; i++)
+    for (unsigned int i = insert_pos; i < insert_pos + distance; ++i)
       start_[i] = *(first++);
 
     end_of_storage_ += distance;
@@ -394,14 +397,14 @@ class vector {
     pointer tmp = allocate(new_capacity);
 
     // Copy values before new value into tmp
-    for (unsigned int i = 0; i < insert_pos; i++) tmp[i] = start_[i];
+    for (unsigned int i = 0; i < insert_pos; ++i) tmp[i] = start_[i];
 
     // Copy range
-    for (unsigned int i = insert_pos; i < insert_pos + count; i++)
+    for (unsigned int i = insert_pos; i < insert_pos + count; ++i)
       construct(tmp + i, value);
 
     // Copy remaining original array
-    for (unsigned int i = insert_pos + count; i < old_size + count; i++)
+    for (unsigned int i = insert_pos + count; i < old_size + count; ++i)
       tmp[i] = start_[i - count];
 
     deallocate_all();
@@ -418,7 +421,7 @@ class vector {
                                         const value_type& value) {
     // Case: inserting with iterator end()
     if (insert_pos == size()) {
-      for (unsigned int i = 0; i < count; i++) push_back(value);
+      for (unsigned int i = 0; i < count; ++i) push_back(value);
       return end() - count;
     }
 
@@ -426,11 +429,11 @@ class vector {
 
     // Copying from the back
     // Copy values from end_of_storage until end of insert range
-    for (unsigned int i = new_size; i > insert_pos + count; i--)
+    for (unsigned int i = new_size; i > insert_pos + count; --i)
       start_[i] = start_[i - count];
 
     // Construct range of new values
-    for (unsigned int i = insert_pos; i < insert_pos + count; i++)
+    for (unsigned int i = insert_pos; i < insert_pos + count; ++i)
       construct(start_ + i, value);
 
     end_of_storage_ += count;
@@ -441,17 +444,17 @@ class vector {
   iterator insert_single_realloc(size_type insert_pos,
                                  const value_type& value) {
     size_type old_size = size();
-    size_type new_capacity = capacity() == 0 ? 1 : capacity() * 2;
+    size_type new_capacity = std::max((size_type) 1, capacity() * 2);
     pointer tmp = allocate(new_capacity);
 
     // Copy values before new value into tmp
-    for (unsigned int i = 0; i < insert_pos; i++) tmp[i] = start_[i];
+    for (unsigned int i = 0; i < insert_pos; ++i) tmp[i] = start_[i];
 
     // Construct new value
     construct(tmp + insert_pos, value);
 
     // Copy values after new value into tmp
-    for (unsigned int i = insert_pos; i < old_size; i++) {
+    for (unsigned int i = insert_pos; i < old_size; ++i) {
       tmp[i + 1] = start_[i];
     }
 
@@ -481,7 +484,7 @@ class vector {
     // Construct new value
     construct(start_ + insert_pos, value);
 
-    end_of_storage_++;
+    ++end_of_storage_;
     return begin() + insert_pos;
   }
 
@@ -507,7 +510,7 @@ class vector {
   // pointer range start until start + n
   template <class InputIt>
   void uninitialized_copy_n(InputIt first, size_type n, pointer start) {
-    for (unsigned int i = 0; i < n; i++) {
+    for (unsigned int i = 0; i < n; ++i) {
       construct(start, *first);
       ++start;
       ++first;
@@ -535,7 +538,7 @@ class vector {
       InputIt last) {
     difference_type distance = 0;
     while (first++ != last) {
-      distance++;
+      ++distance;
     }
     return distance;
   }
@@ -559,8 +562,10 @@ class vector {
   }
 
   void destroy(pointer first, pointer last) {
+    if (ft::is_integral<value_type>::value) return;
     while (first != last) {
-      allocator_.destroy(first++);
+      allocator_.destroy(first);
+      ++first;
     }
   }
 };
@@ -572,7 +577,7 @@ class vector {
 template <class T, class Alloc>
 bool operator==(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
   if (lhs.size() != rhs.size()) return false;
-  return equal(lhs.begin(), lhs.end(), rhs.begin());
+  return ft::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
 
 template <class T, class Alloc>
