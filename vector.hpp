@@ -1,6 +1,7 @@
 #ifndef VECTOR_H
 #define VECTOR_H
 #include <algorithm>
+#include <cstring>
 #include <limits>
 #include <memory>
 #include <stdexcept>
@@ -115,9 +116,8 @@ class vector {
       this->~vector();
       initialize_vector_with_value(count, value);
     } else {
-      for (pointer p1 = start_, p2 = p1 + count; p1 != p2; ++p1)
-        construct(p1, value);
-      if (count < this->size()) destroy(start_ + count, end_of_storage_);
+      destroy(start_, end_of_storage_);
+      for (unsigned int i = 0; i < count; ++i) construct(start_ + i, value);
       end_of_storage_ = start_ + count;
     }
   }
@@ -126,14 +126,18 @@ class vector {
   void assign(typename ft::enable_if<!std::numeric_limits<InputIt>::is_integer,
                                      InputIt>::type first,
               InputIt last) {
-    size_type count = get_distance(first, last);
-    if (this->capacity() < count) {
+    size_type distance = get_distance(first, last);
+
+    if (this->capacity() < distance) {
       this->~vector();
       initialize_vector_with_range(first, last);
     } else {
-      std::copy(first, last, this->begin());
-      if (count < this->size()) destroy(start_ + count, end_of_storage_);
-      end_of_storage_ = start_ + count;
+      destroy(start_, end_of_storage_);
+      for (unsigned int i = 0; i < distance; ++i) {
+        construct(start_ + i, *first);
+        ++first;
+      }
+      end_of_storage_ = start_ + distance;
     }
   }
 
@@ -185,7 +189,10 @@ class vector {
     size_type size = this->size();
     if (new_cap > size) {
       pointer tmp = allocate(new_cap);
-      std::copy(this->begin(), this->end(), iterator(tmp));
+      if (ft::is_integral<value_type>::value)
+        std::memcpy(tmp, start_, size * sizeof(value_type));
+      else
+        std::copy(this->begin(), this->end(), iterator(tmp));
       this->~vector();
       start_ = tmp;
       finish_ = start_ + new_cap;
@@ -233,30 +240,39 @@ class vector {
   }
 
   iterator erase(const iterator& pos) {
-    if (empty()) return end();
+    if (empty()) return end_of_storage_;
     size_type pos_to_remove = pos - begin();
-    size_type size = this->size();
+    size_type size_after = this->size() - 1;
 
-    if (!ft::is_integral<value_type>::value)
+    if (!ft::is_integral<value_type>::value) {
       allocator_.destroy(start_ + pos_to_remove);
-    for (unsigned int i = pos_to_remove; i < size; ++i)
-      start_[i] = start_[i + 1];
-
+      for (unsigned int i = pos_to_remove; i < size_after; ++i)
+        start_[i] = start_[i + 1];
+      allocator_.destroy(end_of_storage_ - 1);
+    } else {
+      std::memmove(start_ + pos_to_remove, start_ + pos_to_remove + 1,
+                   (size_after - pos_to_remove) * sizeof(value_type));
+    }
     --end_of_storage_;
-    return begin() + pos_to_remove;
+    return start_ + pos_to_remove;
   }
 
   iterator erase(const iterator& first, const iterator& last) {
-    size_type pos_to_remove = first - begin();
-    size_type distance = last - first;
     size_type size = this->size();
+    size_type distance = last - first;
+    size_type pos_to_remove = first - start_;
+    pointer start_removal = start_ + pos_to_remove;
 
-    destroy(first.base(), last.base());
-    for (unsigned int i = pos_to_remove; i < size; ++i)
-      start_[i] = start_[i + distance];
-
+    destroy(start_removal, start_removal + distance);
+    if (!ft::is_integral<value_type>::value) {
+      for (unsigned int i = pos_to_remove; i < size; ++i)
+        start_[i] = start_[i + distance];
+    } else {
+      std::memmove(start_removal, start_removal + distance,
+                   (size - pos_to_remove - 1) * sizeof(value_type));
+    }
     end_of_storage_ -= distance;
-    return begin() + pos_to_remove;
+    return start_ + pos_to_remove;
   }
 
   void push_back(const value_type& value) {
@@ -284,8 +300,11 @@ class vector {
     if (size < count) {
       if (this->capacity() < count) {
         pointer tmp = allocate(count);
-        std::copy(this->begin(), this->end(), iterator(tmp));
-        for (unsigned int i = size; i < count; ++i) tmp[i] = value;
+        if (ft::is_integral<value_type>::value)
+          std::memcpy(tmp, start_, size * sizeof(value_type));
+        else
+          std::copy(this->begin(), this->end(), iterator(tmp));
+        for (unsigned int i = size; i < count; ++i) construct(tmp + i, value);
         this->~vector();
         start_ = tmp;
         end_of_storage_ = start_ + count;
@@ -302,17 +321,8 @@ class vector {
 
   void swap(vector& other) {
     std::swap(this->allocator_, other.allocator_);
-    /* pointer tmp = this->start_;
-    this->start_ = other.start_;
-    other.start_ = tmp; */
     std::swap(this->start_, other.start_);
-    /* tmp = this->finish_;
-    this->finish_ = other.finish_;
-    other.finish_ = tmp; */
     std::swap(this->finish_, other.finish_);
-    /* tmp = this->end_of_storage_;
-    this->end_of_storage_ = other.end_of_storage_;
-    other.end_of_storage_ = tmp; */
     std::swap(this->end_of_storage_, other.end_of_storage_);
   }
 
@@ -493,7 +503,7 @@ class vector {
   void initialize_vector_with_value(size_type count, const value_type& value) {
     start_ = allocate(count);
     finish_ = start_ + count;
-    std::uninitialized_fill_n(start_, count, value);
+    uninitialized_fill_n(start_, count, value);
     end_of_storage_ = finish_;
   }
 
@@ -502,7 +512,11 @@ class vector {
   void initialize_vector_with_range(const InputIt& it1, const InputIt& it2) {
     size_type distance = get_distance(it1, it2);
     start_ = allocate(distance);
-    uninitialized_copy_n(it1, distance, start_);
+    if (ft::is_same<typename ft::iterator_traits<InputIt>::iterator_category,
+                    std::random_access_iterator_tag>::value)
+      std::memcpy(start_, &(*it1), distance * sizeof(value_type));
+    else
+      uninitialized_copy_n(it1, distance, start_);
     end_of_storage_ = start_ + distance;
     finish_ = end_of_storage_;
   }
@@ -514,6 +528,16 @@ class vector {
     for (unsigned int i = 0; i < n; ++i) {
       construct(start, *first);
       ++start;
+      ++first;
+    }
+  }
+
+  // Copies the given value value to the first count elements in an
+  // uninitialized memory area beginning at first
+  void uninitialized_fill_n(pointer first, size_type count,
+                            const value_type& value) {
+    for (unsigned int i = 0; i < count; ++i) {
+      construct(first, value);
       ++first;
     }
   }
@@ -558,7 +582,17 @@ class vector {
     }
   }
 
-  void construct(pointer position, const value_type& value) {
+  template <class U>
+  void construct(
+      U* position,
+      const typename ft::enable_if<ft::is_integral<U>::value, U>::type& value) {
+    *position = value;
+  }
+
+  template <class U>
+  void construct(U* position,
+                 const typename ft::enable_if<!ft::is_integral<U>::value,
+                                              U>::type& value) {
     allocator_.construct(position, value);
   }
 
@@ -619,7 +653,5 @@ void swap(ft::vector<T, Alloc>& lhs, ft::vector<T, Alloc>& rhs) {
 }
 
 }  // namespace ft
-
-
 
 #endif  // VECTOR_H
