@@ -1,5 +1,6 @@
 #ifndef VECTOR_H
 #define VECTOR_H
+#include <algorithm>
 #include <limits>
 #include <memory>
 #include <stdexcept>
@@ -261,7 +262,7 @@ class vector {
   void push_back(const value_type& value) {
     size_type size = this->size();
     size_type capacity = this->capacity();
-    if (size == capacity) reserve(std::max((size_type) 1, capacity * 2));
+    if (size == capacity) reserve(std::max((size_type)1, capacity * 2));
     construct(start_ + size, value);
     ++end_of_storage_;
   }
@@ -444,7 +445,7 @@ class vector {
   iterator insert_single_realloc(size_type insert_pos,
                                  const value_type& value) {
     size_type old_size = size();
-    size_type new_capacity = std::max((size_type) 1, capacity() * 2);
+    size_type new_capacity = std::max((size_type)1, capacity() * 2);
     pointer tmp = allocate(new_capacity);
 
     // Copy values before new value into tmp
@@ -571,7 +572,7 @@ class vector {
 };
 
 //**************************************************
-// Non-member overloads of vector
+// Non-member operator overloads
 //**************************************************
 
 template <class T, class Alloc>
@@ -606,6 +607,19 @@ bool operator>=(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
   return !(lhs < rhs);
 }
 
+//**************************************************
+// Non-member functions
+//**************************************************
+
+// It is sadly not possible to write a specialization of the std::swap function
+// So this is the closest I can make
+template <class T, class Alloc>
+void swap(ft::vector<T, Alloc>& lhs, ft::vector<T, Alloc>& rhs) {
+  lhs.swap(rhs);
+}
+
 }  // namespace ft
+
+
 
 #endif  // VECTOR_H
