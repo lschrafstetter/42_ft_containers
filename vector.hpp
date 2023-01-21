@@ -2,6 +2,7 @@
 #define VECTOR_H
 #include <algorithm>
 #include <cstring>
+#include <exception>
 #include <limits>
 #include <memory>
 #include <stdexcept>
@@ -54,9 +55,10 @@ class vector {
   // Range initialization with Iterators
   template <class InputIt>
   explicit vector(
+      InputIt first, InputIt last,
+      const allocator_type& alloc = allocator_type(),
       typename ft::enable_if<!std::numeric_limits<InputIt>::is_integer,
-                             InputIt>::type first,
-      InputIt last, const allocator_type& alloc = allocator_type())
+                             InputIt>::type* = 0)
       : allocator_(alloc) {
     initialize_vector_with_range(first, last);
   }
@@ -93,7 +95,8 @@ class vector {
         this->~vector();
         initialize_vector_with_range(other.begin(), other.end());
       } else {
-        std::copy(other.begin(), other.end(), this->begin());
+        for (unsigned i = 0; i < size_other; ++i)
+          construct(start_ + i, other[i]);
         if (other.size() < this->size()) {
           // if you have "left over objects" of *this, destroy them
           destroy(start_ + this->size(), end_of_storage_);
@@ -123,9 +126,9 @@ class vector {
   }
 
   template <class InputIt>
-  void assign(typename ft::enable_if<!std::numeric_limits<InputIt>::is_integer,
-                                     InputIt>::type first,
-              InputIt last) {
+  void assign(InputIt first, InputIt last,
+              typename ft::enable_if<!std::numeric_limits<InputIt>::is_integer,
+                                     InputIt>::type* = 0) {
     size_type distance = get_distance(first, last);
 
     if (this->capacity() < distance) {
@@ -192,7 +195,8 @@ class vector {
       if (ft::is_integral<value_type>::value)
         std::memcpy(tmp, start_, size * sizeof(value_type));
       else
-        std::copy(this->begin(), this->end(), iterator(tmp));
+        for (unsigned int i = 0; i < size; ++i)
+          construct(tmp + i, *(start_ + i));
       this->~vector();
       start_ = tmp;
       finish_ = start_ + new_cap;
@@ -227,10 +231,9 @@ class vector {
 
   template <class InputIt>
   iterator insert(
-      const const_iterator& pos,
+      const const_iterator& pos, InputIt first, InputIt last,
       typename ft::enable_if<!std::numeric_limits<InputIt>::is_integer,
-                             InputIt>::type first,
-      InputIt last) {
+                             InputIt>::type* = 0) {
     size_type insert_pos = pos - begin();
     size_type distance = get_distance(first, last);
 
@@ -296,21 +299,26 @@ class vector {
   // 2) size < count and capacity >= count: just fill with value
   // 3) size > count: erase all "leftover" objects
   void resize(size_type count, value_type value = value_type()) {
+    if (count > max_size())
+      throw std::length_error("resize count exceeded max_size()");
     size_type size = this->size();
     if (size < count) {
       if (this->capacity() < count) {
         pointer tmp = allocate(count);
+
         if (ft::is_integral<value_type>::value)
           std::memcpy(tmp, start_, size * sizeof(value_type));
         else
-          std::copy(this->begin(), this->end(), iterator(tmp));
+          for (unsigned int i = 0; i < size; ++i) construct(tmp + i, start_[i]);
         for (unsigned int i = size; i < count; ++i) construct(tmp + i, value);
+
         this->~vector();
         start_ = tmp;
         end_of_storage_ = start_ + count;
         finish_ = end_of_storage_;
       } else {
-        for (unsigned int i = size; i < count; ++i) (*this)[i] = value;
+        for (unsigned int i = size; i < count; ++i)
+          construct(start_ + i, value);
         end_of_storage_ = start_ + count;
       }
     } else if (size > count) {
@@ -343,10 +351,9 @@ class vector {
   // Helper for insert function with same-value-range insert
   template <class InputIt>
   iterator insert_range_iterator_realloc(
-      size_type insert_pos,
+      size_type insert_pos, InputIt& first, const InputIt& last,
       typename ft::enable_if<!std::numeric_limits<InputIt>::is_integer,
-                             InputIt>::type& first,
-      const InputIt& last) {
+                             InputIt>::type* = 0) {
     size_type old_size = size();
     size_type distance = get_distance(first, last);
     size_type new_capacity = old_size + distance;
@@ -374,10 +381,9 @@ class vector {
   // Helper for insert function with same-value-range insert
   template <class InputIt>
   iterator insert_range_iterator_without_realloc(
-      size_type insert_pos,
+      size_type insert_pos, InputIt& first, const InputIt& last,
       typename ft::enable_if<!std::numeric_limits<InputIt>::is_integer,
-                             InputIt>::type& first,
-      const InputIt& last) {
+                             InputIt>::type* = 0) {
     size_type distance = get_distance(first, last);
 
     // Case: inserting with iterator end()
@@ -513,7 +519,8 @@ class vector {
     size_type distance = get_distance(it1, it2);
     start_ = allocate(distance);
     if (ft::is_same<typename ft::iterator_traits<InputIt>::iterator_category,
-                    std::random_access_iterator_tag>::value)
+                    std::random_access_iterator_tag>::value &&
+        ft::is_integral<value_type>::value)
       std::memcpy(start_, &(*it1), distance * sizeof(value_type));
     else
       uninitialized_copy_n(it1, distance, start_);
@@ -545,22 +552,22 @@ class vector {
   // For random_access_iterator
   template <class InputIt>
   difference_type get_distance(
+      InputIt first, InputIt last,
       typename ft::enable_if<
           ft::is_same<typename ft::iterator_traits<InputIt>::iterator_category,
                       std::random_access_iterator_tag>::value,
-          InputIt>::type first,
-      InputIt last) const {
+          InputIt>::type* = 0) const {
     return last - first;
   }
 
   // For every other iterator
   template <class InputIt>
   difference_type get_distance(
+      InputIt first, InputIt last,
       typename ft::enable_if<
           !ft::is_same<typename ft::iterator_traits<InputIt>::iterator_category,
                        std::random_access_iterator_tag>::value,
-          InputIt>::type first,
-      InputIt last) {
+          InputIt>::type* = 0) {
     difference_type distance = 0;
     while (first++ != last) {
       ++distance;
@@ -573,23 +580,27 @@ class vector {
   //**************************************************
 
   pointer allocate(size_t n) {
+    if (n > max_size()) throw std::bad_alloc();
     return static_cast<pointer>(allocator_.allocate(n * sizeof(value_type)));
   }
 
   void deallocate_all() {
     if (start_) {
-      allocator_.deallocate(start_, finish_ - start_);
+      allocator_.deallocate(start_, (finish_ - start_) * sizeof(value_type));
+      start_ = NULL;
+      end_of_storage_ = NULL;
+      finish_ = NULL;
     }
   }
 
-  template <class U>
+  template <class U>  // U = value_type
   void construct(
       U* position,
       const typename ft::enable_if<ft::is_integral<U>::value, U>::type& value) {
     *position = value;
   }
 
-  template <class U>
+  template <class U>  // U = value_type
   void construct(U* position,
                  const typename ft::enable_if<!ft::is_integral<U>::value,
                                               U>::type& value) {
