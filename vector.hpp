@@ -48,8 +48,8 @@ class vector {
   // Constructor sets initial size, all with one value
   explicit vector(size_type count, const value_type& value = value_type(),
                   const allocator_type& alloc = allocator_type())
-      : allocator_(alloc) {
-    initialize_vector_with_value(count, value);
+      : allocator_(alloc), start_(NULL), finish_(NULL), end_of_storage_(NULL) {
+    assign(count, value);
   }
 
   // Range initialization with Iterators
@@ -59,8 +59,8 @@ class vector {
       const allocator_type& alloc = allocator_type(),
       typename ft::enable_if<!std::numeric_limits<InputIt>::is_integer,
                              InputIt>::type* = 0)
-      : allocator_(alloc) {
-    initialize_vector_with_range(first, last);
+      : allocator_(alloc), start_(NULL), finish_(NULL), end_of_storage_(NULL) {
+    assign(first, last);
   }
 
   // Copy constructor
@@ -69,7 +69,7 @@ class vector {
         start_(NULL),
         finish_(NULL),
         end_of_storage_(NULL) {
-    if (other.size()) initialize_vector_with_range(other.begin(), other.end());
+    if (other.size()) assign(other.begin(), other.end());
   }
 
   // Destructor
@@ -93,8 +93,9 @@ class vector {
       size_type size_other = other.size();
       if (this->capacity() < size_other) {
         this->~vector();
-        initialize_vector_with_range(other.begin(), other.end());
+        assign(other.begin(), other.end());
       } else {
+        this->clear();
         for (unsigned i = 0; i < size_other; ++i)
           construct(start_ + i, other[i]);
         if (other.size() < this->size()) {
@@ -117,7 +118,10 @@ class vector {
   void assign(size_type count, const T& value) {
     if (this->capacity() < count) {
       this->~vector();
-      initialize_vector_with_value(count, value);
+      start_ = allocate(count);
+      finish_ = start_ + count;
+      uninitialized_fill_n(start_, count, value);
+      end_of_storage_ = finish_;
     } else {
       destroy(start_, end_of_storage_);
       for (unsigned int i = 0; i < count; ++i) construct(start_ + i, value);
@@ -129,11 +133,34 @@ class vector {
   void assign(InputIt first, InputIt last,
               typename ft::enable_if<!std::numeric_limits<InputIt>::is_integer,
                                      InputIt>::type* = 0) {
+    typedef typename iterator_traits<InputIt>::iterator_category category;
+    assign_helper(first, last, category());
+  }
+
+  // Normal range assign for every iterator that is "higher level" than an
+  // input_iterator
+  template <class InputIt>
+  void assign_helper(InputIt first, InputIt last,
+                     std::random_access_iterator_tag) {
     size_type distance = get_distance(first, last);
 
     if (this->capacity() < distance) {
       this->~vector();
-      initialize_vector_with_range(first, last);
+      start_ = allocate(distance);
+      // memcpy only for:
+      // 1) random_access_iterators: contiguous memory
+      // 2) Integral types (otherwise we must construct)
+      // 3) If the pointer types are the same (edge case: making vector<long>
+      // out of array[int])
+      if (ft::is_same<typename ft::iterator_traits<InputIt>::iterator_category,
+                      std::random_access_iterator_tag>::value &&
+          ft::is_integral<value_type>::value &&
+          sizeof(*first) == sizeof(*start_))
+        std::memcpy(start_, &(*first), distance * sizeof(value_type));
+      else
+        uninitialized_copy_n(first, distance, start_);
+      end_of_storage_ = start_ + distance;
+      finish_ = end_of_storage_;
     } else {
       destroy(start_, end_of_storage_);
       for (unsigned int i = 0; i < distance; ++i) {
@@ -142,6 +169,18 @@ class vector {
       }
       end_of_storage_ = start_ + distance;
     }
+  }
+
+  // Range assign for input_iterators
+  template <class InputIt>
+  void assign_helper(InputIt first, InputIt last, std::input_iterator_tag) {
+    this->clear();
+    vector<value_type> tmp;
+    while (first != last) {
+      tmp.push_back(*first);
+      ++first;
+    }
+    assign(tmp.begin(), tmp.end());
   }
 
   allocator_type get_allocator() const { return allocator_; }
@@ -243,33 +282,37 @@ class vector {
   }
 
   iterator erase(const iterator& pos) {
-    if (empty()) return end_of_storage_;
+    if (pos == end()) return end();
     size_type pos_to_remove = pos - begin();
-    size_type size_after = this->size() - 1;
+    size_type size = this->size();
 
     if (!ft::is_integral<value_type>::value) {
-      allocator_.destroy(start_ + pos_to_remove);
-      for (unsigned int i = pos_to_remove; i < size_after; ++i)
+      for (unsigned int i = pos_to_remove; i < size - 1; ++i)
         start_[i] = start_[i + 1];
-      allocator_.destroy(end_of_storage_ - 1);
+      allocator_.destroy(start_ + size - 1);
     } else {
       std::memmove(start_ + pos_to_remove, start_ + pos_to_remove + 1,
-                   (size_after - pos_to_remove) * sizeof(value_type));
+                   (size - pos_to_remove - 1) * sizeof(value_type));
     }
     --end_of_storage_;
     return start_ + pos_to_remove;
   }
 
   iterator erase(const iterator& first, const iterator& last) {
+    size_type distance = get_distance(first, last);
+    if (!distance) return first;
     size_type size = this->size();
-    size_type distance = last - first;
+    size_type new_size = size - distance;
     size_type pos_to_remove = first - start_;
     pointer start_removal = start_ + pos_to_remove;
 
-    destroy(start_removal, start_removal + distance);
     if (!ft::is_integral<value_type>::value) {
-      for (unsigned int i = pos_to_remove; i < size; ++i)
-        start_[i] = start_[i + distance];
+      unsigned int i = pos_to_remove;
+      while (i < new_size) {
+        *(start_ + i) = *(start_ + i + distance);
+        ++i;
+      }
+      destroy(start_ + i, start_ + size);
     } else {
       std::memmove(start_removal, start_removal + distance,
                    (size - pos_to_remove - 1) * sizeof(value_type));
@@ -503,29 +546,6 @@ class vector {
 
     ++end_of_storage_;
     return begin() + insert_pos;
-  }
-
-  // Initializes an uninitialize vector with count elements of a value
-  void initialize_vector_with_value(size_type count, const value_type& value) {
-    start_ = allocate(count);
-    finish_ = start_ + count;
-    uninitialized_fill_n(start_, count, value);
-    end_of_storage_ = finish_;
-  }
-
-  // Initializes an uninitialize vector with a range of elements
-  template <class InputIt>
-  void initialize_vector_with_range(const InputIt& it1, const InputIt& it2) {
-    size_type distance = get_distance(it1, it2);
-    start_ = allocate(distance);
-    if (ft::is_same<typename ft::iterator_traits<InputIt>::iterator_category,
-                    std::random_access_iterator_tag>::value &&
-        ft::is_integral<value_type>::value)
-      std::memcpy(start_, &(*it1), distance * sizeof(value_type));
-    else
-      uninitialized_copy_n(it1, distance, start_);
-    end_of_storage_ = start_ + distance;
-    finish_ = end_of_storage_;
   }
 
   // Constructs a range from first until first + n into the uninitialized
