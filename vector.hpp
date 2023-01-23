@@ -672,29 +672,23 @@ bool operator>=(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
   return !(lhs < rhs);
 }
 
+// Uncomment this to pass the ft-containers-terminator tester even though we are
+// not supposed to implement an ft:swap function
+/*
+template <class T, class Alloc>
+void swap(ft::vector<T, Alloc>& lhs, ft::vector<T, Alloc>& rhs) {
+  lhs.swap(rhs);
+} */
+
 }  // namespace ft
 
 #include <vector>
 
-namespace std
-{
-    template <class T, class Alloc>
-    void swap(ft::vector<T, Alloc>& lhs, ft::vector<T, Alloc>& rhs)
-    {
-       lhs.swap(rhs);
-    }
-
-    template <class T, class Alloc>
-    void swap(std::vector<T, Alloc>& lhs, ft::vector<T, Alloc>& rhs)
-    {
-       rhs.swap(lhs);
-    }
-
-    template <class T, class Alloc>
-    void swap(ft::vector<T, Alloc>& lhs, std::vector<T, Alloc>& rhs)
-    {
-       lhs.swap(rhs);
-    }
+namespace std {
+template <class T, class Alloc>
+void swap(ft::vector<T, Alloc>& lhs, ft::vector<T, Alloc>& rhs) {
+  lhs.swap(rhs);
 }
+}  // namespace std
 
 #endif  // VECTOR_H
