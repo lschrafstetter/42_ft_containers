@@ -283,42 +283,40 @@ class vector {
 
   iterator erase(const iterator& pos) {
     if (pos == end()) return end();
-    size_type pos_to_remove = pos - begin();
-    size_type size = this->size();
+    size_type pos_first_removal = pos - start_;
+    size_type new_size = this->size() - 1;
+    size_type n_objects_to_move = new_size - pos_first_removal;
 
-    if (!ft::is_integral<value_type>::value) {
-      for (unsigned int i = pos_to_remove; i < size - 1; ++i)
-        start_[i] = start_[i + 1];
-      allocator_.destroy(start_ + size - 1);
+    if (ft::is_integral<value_type>::value) {
+      std::memmove(pos.base(), pos.base() + 1,
+                   n_objects_to_move * sizeof(value_type));
     } else {
-      std::memmove(start_ + pos_to_remove, start_ + pos_to_remove + 1,
-                   (size - pos_to_remove - 1) * sizeof(value_type));
+      for (unsigned int i = pos_first_removal; i < new_size; ++i)
+        start_[i] = start_[i + 1];
+      allocator_.destroy(start_ + new_size);
     }
     --end_of_storage_;
-    return start_ + pos_to_remove;
+    return pos;
   }
 
   iterator erase(const iterator& first, const iterator& last) {
     size_type distance = get_distance(first, last);
     if (!distance) return first;
-    size_type size = this->size();
-    size_type new_size = size - distance;
-    size_type pos_to_remove = first - start_;
-    pointer start_removal = start_ + pos_to_remove;
+    size_type new_size = size() - distance;
+    size_type pos_first_removal = first - start_;
+    size_type n_objects_to_move = new_size - pos_first_removal;
 
-    if (!ft::is_integral<value_type>::value) {
-      unsigned int i = pos_to_remove;
-      while (i < new_size) {
-        *(start_ + i) = *(start_ + i + distance);
-        ++i;
-      }
-      destroy(start_ + i, start_ + size);
+    if (ft::is_integral<value_type>::value) {
+      std::memmove(first.base(), first.base() + distance,
+                   n_objects_to_move * sizeof(value_type));
     } else {
-      std::memmove(start_removal, start_removal + distance,
-                   (size - pos_to_remove - 1) * sizeof(value_type));
+      for (unsigned int i = pos_first_removal; i < new_size; ++i)
+        start_[i] = start_[i + distance];
+      destroy(start_ + new_size, end_of_storage_);
     }
+
     end_of_storage_ -= distance;
-    return start_ + pos_to_remove;
+    return first;
   }
 
   void push_back(const value_type& value) {
