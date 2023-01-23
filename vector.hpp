@@ -252,6 +252,19 @@ class vector {
   }
 
   iterator insert(const const_iterator& pos, const value_type& value) {
+    size_type pos_insert = pos.base() - start_;
+    _insert(pos, 1, value);
+    return iterator(start_ + pos_insert);
+  }
+
+  iterator insert(const const_iterator& pos, size_type count,
+                  const value_type& value) {
+    size_type pos_insert = pos.base() - start_;
+    _insert(pos, count, value);
+    return iterator(start_ + pos_insert);
+  }
+
+  /* iterator insert(const const_iterator& pos, const value_type& value) {
     size_type insert_pos = pos - begin();
 
     if (this->size() == this->capacity())
@@ -266,7 +279,7 @@ class vector {
     if (this->size() < capacity() + count)
       return insert_range_realloc(insert_pos, count, value);
     return insert_range_without_realloc(insert_pos, count, value);
-  }
+  } */
 
   template <class InputIt>
   iterator insert(
@@ -281,6 +294,7 @@ class vector {
     return insert_range_iterator_without_realloc(insert_pos, first, last);
   }
 
+  // Erases one element of the vector and moves the following objects up
   iterator erase(const iterator& pos) {
     if (pos == end()) return end();
     size_type pos_first_removal = pos - start_;
@@ -299,6 +313,7 @@ class vector {
     return pos;
   }
 
+  // Erases a range of elements of the vector and moves the following objects up
   iterator erase(const iterator& first, const iterator& last) {
     size_type distance = get_distance(first, last);
     if (!distance) return first;
@@ -389,6 +404,87 @@ class vector {
   // General helper functions
   //**************************************************
 
+  void _insert(const const_iterator& pos, size_type count,
+               const value_type& value) {
+    if (count == 0) return;
+    if (capacity() - size() >= count)
+      _insert_no_realloc(pos, count, value);
+    else {
+      if (count == 1)
+        insert_single_realloc(pos - begin(), value);
+      else
+        insert_range_realloc(pos - begin(), count, value);
+    }
+  }
+
+  void _insert_no_realloc(const const_iterator& pos, size_type count,
+                          const value_type& value) {
+    if (pos != end()) {
+      // Basic guarantee
+      size_type size = this->size();
+      size_type insert_position = pos.base() - start_;
+      size_type n_objects_to_move = size - insert_position;
+      // First step: Copy from back to new_size
+      if (ft::is_integral<value_type>::value)
+        std::memmove(start_ + insert_position + count, start_ + insert_position,
+                     n_objects_to_move * sizeof(value_type));
+      else {
+        // Make space for new objects: move objects "count" spaces to "right"
+        size_type i = 0;
+        size_type index_new_last_element = size + n_objects_to_move - 1;
+        try {
+          // Costruct from behind
+          while (i++ < n_objects_to_move)
+            construct(start_ + index_new_last_element--, value);
+        } catch (std::exception& e) {
+          // If exception is thrown, destroy all already constructed objects
+          destroy(start_ + index_new_last_element, end_of_storage_ + count);
+          throw e;
+        }
+      }
+
+      // Second step: construct new objects
+      if (ft::is_integral<value_type>::value) {
+        for (unsigned int i = 0; i < count; ++i)
+          start_[insert_position + i] = value;
+      } else {
+        size_type i = 0;
+        try {
+          while (i < count) {
+            start_[insert_position + i] = value;
+            ++i;
+          }
+        } catch (std::exception& e) {
+          // if an exception is thrown, just stop and leave old objects in the
+          // range
+          throw e;
+        }
+      }
+      end_of_storage_ += count;
+    } else {
+      // Strong guarantee
+      size_type i = 0;
+      try {
+        while (i < count) {
+          construct(end_of_storage_ + i, value);
+          ++i;
+        }
+        end_of_storage_ += count;
+      } catch (std::exception& e) {
+        // If an exception occurs, destroy already constructed objects
+        destroy(end_of_storage_, end_of_storage_ + i);
+        throw e;
+      }
+    }
+  }
+
+  void _insert_with_realloc(const const_iterator& pos, size_type count,
+                            const value_type& value) {
+    (void)pos;
+    (void)count;
+    (void)value;
+  }
+
   // Helper for insert function with same-value-range insert
   template <class InputIt>
   iterator insert_range_iterator_realloc(
@@ -473,7 +569,7 @@ class vector {
     return begin() + insert_pos;
   }
 
-  // Helper for insert function with same-value-range insert
+  /* // Helper for insert function with same-value-range insert
   // Enough capacity
   iterator insert_range_without_realloc(size_type insert_pos, size_type count,
                                         const value_type& value) {
@@ -496,7 +592,7 @@ class vector {
 
     end_of_storage_ += count;
     return begin() + insert_pos;
-  }
+  } */
 
   // Helper for insert functions with single position insert
   iterator insert_single_realloc(size_type insert_pos,
@@ -525,7 +621,7 @@ class vector {
     return begin() + insert_pos;
   }
 
-  // Helper for insert function with single position insert
+  /* // Helper for insert function with single position insert
   // There is enough capacity
   iterator insert_single_without_realloc(size_type insert_pos,
                                          const value_type& value) {
@@ -544,7 +640,7 @@ class vector {
 
     ++end_of_storage_;
     return begin() + insert_pos;
-  }
+  } */
 
   // Constructs a range from first until first + n into the uninitialized
   // pointer range start until start + n
