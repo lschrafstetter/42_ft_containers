@@ -672,17 +672,29 @@ bool operator>=(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
   return !(lhs < rhs);
 }
 
-//**************************************************
-// Non-member functions
-//**************************************************
-
-// It is sadly not possible to write a specialization of the std::swap function
-// So this is the closest I can make
-template <class T, class Alloc>
-void swap(ft::vector<T, Alloc>& lhs, ft::vector<T, Alloc>& rhs) {
-  lhs.swap(rhs);
-}
-
 }  // namespace ft
+
+#include <vector>
+
+namespace std
+{
+    template <class T, class Alloc>
+    void swap(ft::vector<T, Alloc>& lhs, ft::vector<T, Alloc>& rhs)
+    {
+       lhs.swap(rhs);
+    }
+
+    template <class T, class Alloc>
+    void swap(std::vector<T, Alloc>& lhs, ft::vector<T, Alloc>& rhs)
+    {
+       rhs.swap(lhs);
+    }
+
+    template <class T, class Alloc>
+    void swap(ft::vector<T, Alloc>& lhs, std::vector<T, Alloc>& rhs)
+    {
+       lhs.swap(rhs);
+    }
+}
 
 #endif  // VECTOR_H
