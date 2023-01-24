@@ -410,10 +410,11 @@ class vector {
     if (capacity() - size() >= count)
       _insert_no_realloc(pos, count, value);
     else {
-      if (count == 1)
+      _insert_with_realloc(pos, count, value);
+      /* if (count == 1)
         insert_single_realloc(pos - begin(), value);
       else
-        insert_range_realloc(pos - begin(), count, value);
+        insert_range_realloc(pos - begin(), count, value); */
     }
   }
 
@@ -422,6 +423,7 @@ class vector {
     if (pos != end()) {
       // Basic guarantee
       size_type size = this->size();
+      size_type new_size = size + count;
       size_type insert_position = pos.base() - start_;
       size_type n_objects_to_move = size - insert_position;
       // First step: Copy from back to new_size
@@ -430,12 +432,16 @@ class vector {
                      n_objects_to_move * sizeof(value_type));
       else {
         // Make space for new objects: move objects "count" spaces to "right"
-        size_type i = 0;
-        size_type index_new_last_element = size + n_objects_to_move - 1;
+        size_type i = 0; // number of objects constructed
+        size_type index_new_last_element = new_size - 1;
         try {
           // Costruct from behind
-          while (i++ < n_objects_to_move)
-            construct(start_ + index_new_last_element--, value);
+          while (i < n_objects_to_move) {
+            if (new_size - 1 - i < size)
+              allocator_.destroy(start_ + new_size - 1 - i);
+            construct(start_ + new_size - 1 - i, start_[new_size - 1 - i - count]);
+            ++i;
+          }
         } catch (std::exception& e) {
           // If exception is thrown, destroy all already constructed objects
           destroy(start_ + index_new_last_element, end_of_storage_ + count);
@@ -451,6 +457,8 @@ class vector {
         size_type i = 0;
         try {
           while (i < count) {
+            //construct(start_ + insert_position + i, value);
+            //allocator_.destroy(start_ + insert_position + + i)
             start_[insert_position + i] = value;
             ++i;
           }
@@ -480,9 +488,56 @@ class vector {
 
   void _insert_with_realloc(const const_iterator& pos, size_type count,
                             const value_type& value) {
-    (void)pos;
-    (void)count;
-    (void)value;
+    size_type size = this->size();
+    size_type new_size = size + count;
+    size_type new_capacity;
+    if (count == 1) {
+      new_capacity = std::max((size_type)1, capacity() * 2);
+      while (new_capacity < new_size) new_capacity *= 2;
+    } else {
+      new_capacity = new_size;
+    }
+    pointer tmp = allocate(new_capacity);
+    size_type insert_position = pos.base() - start_;
+    size_type n_objects_to_move = size - insert_position;
+    size_type i = 0;  // Counts the number of objects in tmp
+    // Strong guarantee
+    try {
+      // Copy part before insert to tmp
+      if (ft::is_integral<value_type>::value) {
+        std::memcpy(tmp, start_, insert_position * sizeof(value_type));
+        i += insert_position;
+      } else {
+        while (i < insert_position) {
+          construct(tmp + i, start_[i]);
+          ++i;
+        }
+      }
+      // Construct new objects
+      size_type pos_end_of_insert = insert_position + count;
+      while (i < pos_end_of_insert) {
+        construct(tmp + i, value);
+        ++i;
+      }
+      // Copy part after insert to tmp
+      if (ft::is_integral<value_type>::value)
+        std::memcpy(tmp + i, start_ + insert_position,
+                    n_objects_to_move * sizeof(value_type));
+      else {
+        while (i < new_size) {
+          construct(tmp + i + count - 1, start_[i - count]);
+          ++i;
+        }
+      }
+    } catch (std::exception& e) {
+      destroy(tmp, tmp + i + 1);
+      allocator_.deallocate(tmp, i * sizeof(value_type));
+      throw e;
+    }
+    this->~vector();
+    start_ = tmp;
+    end_of_storage_ = start_ + new_size;
+    finish_ = start_ + new_capacity;
   }
 
   // Helper for insert function with same-value-range insert
