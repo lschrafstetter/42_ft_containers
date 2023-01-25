@@ -497,6 +497,7 @@ class vector {
     } else {
       new_capacity = new_size;
     }
+    if (new_capacity > max_size()) throw std::length_error("new capacity over max_size");
     pointer tmp = allocate(new_capacity);
     size_type insert_position = pos.base() - start_;
     size_type n_objects_to_move = size - insert_position;
@@ -525,7 +526,7 @@ class vector {
                     n_objects_to_move * sizeof(value_type));
       else {
         while (i < new_size) {
-          construct(tmp + i + count - 1, start_[i - count]);
+          construct(tmp + i, start_[i - count]);
           ++i;
         }
       }
