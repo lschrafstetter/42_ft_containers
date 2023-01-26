@@ -1,11 +1,5 @@
 #ifndef VECTOR_H
 #define VECTOR_H
-#include <algorithm>
-#include <cstring>
-#include <exception>
-#include <limits>
-#include <memory>
-#include <stdexcept>
 #include "iterator_vector.hpp"
 #include "utilities.hpp"
 
@@ -294,7 +288,7 @@ class vector {
       typename ft::enable_if<!std::numeric_limits<InputIt>::is_integer,
                              InputIt>::type* = 0) {
     size_type insert_position = pos.base() - start_;
-    typedef typename iterator_traits<InputIt>::iterator_category category;
+    typedef typename ft::iterator_traits<InputIt>::iterator_category category;
     _insert_helper(pos, first, last, category());
     return (iterator(start_ + insert_position));
   }
@@ -614,7 +608,7 @@ class vector {
       }
     } catch (...) {
       destroy(tmp, tmp + i + 1);
-      allocator_.deallocate(tmp, i * sizeof(value_type));
+      allocator_.deallocate(tmp, new_capacity * sizeof(value_type));
       throw "Exception when inserting new objects into vector";
     }
     this->~vector();
