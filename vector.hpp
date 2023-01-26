@@ -8,8 +8,6 @@ namespace ft {
 template <typename T, typename Allocator = std::allocator<T> >
 class vector {
  public:
-  template <typename datatype>
-  class Iterator;
   typedef T value_type;
   typedef std::size_t size_type;
   typedef std::ptrdiff_t difference_type;
@@ -126,6 +124,8 @@ class vector {
    */
   void assign(size_type count, const T& value) {
     if (this->capacity() < count) {
+      if (count > max_size())
+        throw "assign count over max_size";
       this->~vector();
       start_ = allocate(count);
       finish_ = start_ + count;
@@ -412,9 +412,10 @@ class vector {
   }
 
   /**
-   * @brief Swaps the allocator and all objects/size/capacity with another vector
-   * 
-   * @param other 
+   * @brief Swaps the allocator and all objects/size/capacity with another
+   * vector
+   *
+   * @param other
    */
   void swap(vector& other) {
     std::swap(this->allocator_, other.allocator_);
@@ -439,8 +440,7 @@ class vector {
 
   // Range assign helper function for all iterators except for input iterators
   template <class InputIt>
-  void assign_helper(InputIt first, InputIt last,
-                     std::forward_iterator_tag) {
+  void assign_helper(InputIt first, InputIt last, std::forward_iterator_tag) {
     size_type distance = get_distance(first, last);
 
     if (this->capacity() < distance) {
@@ -706,7 +706,7 @@ class vector {
     size_type size = this->size();
     size_type distance = get_distance(first, last);
     size_type new_size = size + distance;
-    size_type new_capacity = std::max((size_type) 1, capacity());
+    size_type new_capacity = std::max((size_type)1, capacity());
 
     while (new_capacity < new_size) new_capacity *= 2;
     if (new_capacity > max_size())
@@ -858,9 +858,9 @@ class vector {
 
   /**
    * @brief Destroys the objects in the range [first;last)
-   * 
-   * @param first 
-   * @param last 
+   *
+   * @param first
+   * @param last
    */
   void destroy(pointer first, pointer last) {
     if (ft::is_integral<value_type>::value) return;
