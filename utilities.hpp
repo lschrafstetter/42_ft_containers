@@ -15,6 +15,14 @@
 #ifndef UTILITIES_H
 #define UTILITIES_H
 
+#include <algorithm>
+#include <cstring>
+#include <exception>
+#include <limits>
+#include <memory>
+#include <stdexcept>
+#include <typeinfo>
+
 namespace ft {
 
 //////////////////////////////////////////////////////////////////////////////
@@ -45,8 +53,8 @@ template <typename T>
 struct iterator_traits<const T*> {
   typedef std::ptrdiff_t difference_type;
   typedef T value_type;
-  typedef T* pointer;
-  typedef T& reference;
+  typedef const T* pointer;
+  typedef const T& reference;
   typedef std::random_access_iterator_tag iterator_category;
 };
 
@@ -59,20 +67,20 @@ class reverse_iterator {
  public:
   typedef Iterator iterator_type;
 
-  typedef typename std::iterator_traits<iterator_type>::iterator_category
+  typedef typename ft::iterator_traits<iterator_type>::iterator_category
       iterator_category;
-  typedef typename std::iterator_traits<iterator_type>::value_type value_type;
-  typedef typename std::iterator_traits<iterator_type>::difference_type
+  typedef typename ft::iterator_traits<iterator_type>::value_type value_type;
+  typedef typename ft::iterator_traits<iterator_type>::difference_type
       difference_type;
-  typedef typename std::iterator_traits<iterator_type>::pointer pointer;
-  typedef typename std::iterator_traits<iterator_type>::reference reference;
+  typedef typename ft::iterator_traits<iterator_type>::pointer pointer;
+  typedef typename ft::iterator_traits<iterator_type>::reference reference;
 
   //**************************************************
   // Constructors
   //**************************************************
 
-  reverse_iterator() : current(iterator_type()){};
-  explicit reverse_iterator(iterator_type x) : current(iterator_type(x)){};
+  reverse_iterator() : current(){};
+  explicit reverse_iterator(iterator_type x) : current(x){};
   template <class U>
   reverse_iterator(const reverse_iterator<U>& other) : current(other.base()) {}
   ~reverse_iterator() {}
@@ -233,24 +241,81 @@ struct is_integral<bool> : public true_type {};
 template <>
 struct is_integral<char> : public true_type {};
 template <>
-struct is_integral<unsigned char> : public true_type {};
+struct is_integral<signed char> : public true_type {};
 template <>
 struct is_integral<short> : public true_type {};
 template <>
-struct is_integral<unsigned short> : public true_type {};
-template <>
 struct is_integral<int> : public true_type {};
+template <>
+struct is_integral<long int> : public true_type {};
+template <>
+struct is_integral<unsigned char> : public true_type {};
+template <>
+struct is_integral<unsigned short int> : public true_type {};
 template <>
 struct is_integral<unsigned int> : public true_type {};
 template <>
-struct is_integral<long> : public true_type {};
+struct is_integral<unsigned long int> : public true_type {};
 template <>
-struct is_integral<unsigned long> : public true_type {};
-// C++98 doesn't support long long types
-// template <>
-// struct is_integral<long long> : public true_type {};
-// template <>
-// struct is_integral<unsigned long long> : public true_type {};
+struct is_integral<const bool> : public true_type {};
+template <>
+struct is_integral<const char> : public true_type {};
+template <>
+struct is_integral<const signed char> : public true_type {};
+template <>
+struct is_integral<const short int> : public true_type {};
+template <>
+struct is_integral<const int> : public true_type {};
+template <>
+struct is_integral<const long int> : public true_type {};
+template <>
+struct is_integral<const unsigned char> : public true_type {};
+template <>
+struct is_integral<const unsigned short int> : public true_type {};
+template <>
+struct is_integral<const unsigned int> : public true_type {};
+template <>
+struct is_integral<const unsigned long int> : public true_type {};
+template <>
+struct is_integral<volatile char> : public true_type {};
+template <>
+struct is_integral<volatile bool> : public true_type {};
+template <>
+struct is_integral<volatile signed char> : public true_type {};
+template <>
+struct is_integral<volatile short int> : public true_type {};
+template <>
+struct is_integral<volatile int> : public true_type {};
+template <>
+struct is_integral<volatile long int> : public true_type {};
+template <>
+struct is_integral<volatile unsigned char> : public true_type {};
+template <>
+struct is_integral<volatile unsigned short int> : public true_type {};
+template <>
+struct is_integral<volatile unsigned int> : public true_type {};
+template <>
+struct is_integral<volatile unsigned long int> : public true_type {};
+template <>
+struct is_integral<const volatile char> : public true_type {};
+template <>
+struct is_integral<const volatile bool> : public true_type {};
+template <>
+struct is_integral<const volatile signed char> : public true_type {};
+template <>
+struct is_integral<const volatile short int> : public true_type {};
+template <>
+struct is_integral<const volatile int> : public true_type {};
+template <>
+struct is_integral<const volatile long int> : public true_type {};
+template <>
+struct is_integral<const volatile unsigned char> : public true_type {};
+template <>
+struct is_integral<const volatile unsigned short int> : public true_type {};
+template <>
+struct is_integral<const volatile unsigned int> : public true_type {};
+template <>
+struct is_integral<const volatile unsigned long int> : public true_type {};
 
 //////////////////////////////////////////////////////////////////////////////
 // ft::equal
