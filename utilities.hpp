@@ -22,6 +22,7 @@
 #include <memory>
 #include <stdexcept>
 #include <typeinfo>
+#include <functional>
 
 namespace ft {
 
@@ -399,9 +400,9 @@ struct pair {
   // Constructors
   //**************************************************
 
-  pair(){};
-  pair(const first_type& x, const second_type& y) : first(x), second(y){};
-  pair(const pair& p) : first(p.first), second(p.second){};
+  pair() : first(first_type()), second(second_type()) {}
+  pair(const first_type& x, const second_type& y) : first(x), second(y) {}
+  pair(const pair& p) : first(p.first), second(p.second) {}
 
   //**************************************************
   // Operator overloads
