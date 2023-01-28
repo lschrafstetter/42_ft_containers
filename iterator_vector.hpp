@@ -55,18 +55,15 @@ class Iterator_vector {
     data_ += n;
     return *this;
   }
-
   Iterator_vector operator+(difference_type n) const {
     Iterator_vector tmp(*this);
     tmp += n;
     return tmp;
   }
-
   Iterator_vector& operator-=(difference_type n) {
     data_ -= n;
     return *this;
   }
-
   Iterator_vector operator-(difference_type n) const {
     Iterator_vector tmp(*this);
     tmp -= n;
@@ -100,7 +97,6 @@ class Iterator_vector {
   // Functions
   //**************************************************
   pointer base() const { return data_; }
-
 
   //**************************************************
   // Conversion overloads
