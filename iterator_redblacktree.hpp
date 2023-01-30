@@ -154,13 +154,13 @@ class iterator_rbt {
 // Non-member operator overloads
 //**************************************************
 
-template <class value_type, class node_type, class Compare>
+template <class value_type, class node_type>
 bool operator==(iterator_rbt<value_type, node_type> lhs,
                 iterator_rbt<const value_type, node_type> rhs) {
   return lhs.base() == rhs.base();
 }
 
-template <class value_type, class node_type, class Compare>
+template <class value_type, class node_type>
 bool operator!=(iterator_rbt<value_type, node_type> lhs,
                 iterator_rbt<const value_type, node_type> rhs) {
   return lhs.base() != rhs.base();
