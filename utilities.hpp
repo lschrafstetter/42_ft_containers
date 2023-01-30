@@ -410,8 +410,8 @@ struct pair {
 
   // Assignment operator
   pair& operator=(const pair& other) {
-    this->first = other.first;
-    this->second = other.second;
+    this->~pair();
+	  new (this) pair(other.first, other.second);
     return *this;
   };
 
