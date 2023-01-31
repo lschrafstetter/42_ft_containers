@@ -40,14 +40,20 @@ class map {
   // Constructors
   //**************************************************
 
-  map() : tree_(value_compare()) {}
+  map() : tree_(value_compare(), allocator_type()) {}
+
   explicit map(const Compare& comp, const Allocator& alloc = Allocator())
-      : tree_(value_compare()) {}
+      : tree_(value_compare(), alloc) {}
+
   template <class InputIt>
   map(InputIt first, InputIt last, const Compare& comp = Compare(),
       const Allocator& alloc = Allocator())
-      : tree_(value_compare()) {}
-  map(const map& other) { this->tree_ = other.tree_; }
+      : tree_(comp, alloc) {
+    insert(first, last);
+  }
+
+  map(const map& other) : tree_(other.tree_) {}
+
   ~map() {}
 
   //**************************************************
@@ -75,7 +81,10 @@ class map {
   // Operator overloads
   //**************************************************
 
-  map& operator=(const map& other) {}
+  map& operator=(map other) {
+    if (*this != other) tree_.swap(other.tree_);
+    return *this;
+  }
 
   //**************************************************
   // Member functions
@@ -87,9 +96,23 @@ class map {
   // Element access
   //**************************************************
 
-  reference at(const Key& key) {}
-  const_reference at(const Key& key) const {}
-  reference operator[](const Key& key) {}
+  reference at(const Key& key) {
+    iterator ret = find(key);
+    if (ret == end()) throw std::out_of_range("No element with key found");
+    return *ret;
+  }
+
+  const_reference at(const Key& key) const {
+    return at(key);
+  }
+
+  reference operator[](const Key& key) {
+    iterator ret = find(key);
+    if (ret == end())
+      return *(insert(value_type(key, mapped_value())).first);
+    else
+      return *ret;
+  }
 
   //**************************************************
   // Iterators
@@ -99,10 +122,14 @@ class map {
   const_iterator begin() const { return const_iterator(tree_.get_first()); }
   iterator end() { return iterator(tree_.get_end()); }
   const_iterator end() const { return const_iterator(tree_.get_end()); }
-  reverse_iterator rbegin() {}
-  const_reverse_iterator rbegin() const {}
-  reverse_iterator rend() {}
-  const_reverse_iterator rend() const {}
+  reverse_iterator rbegin() { return reverse_iterator(tree_.get_end()); }
+  const_reverse_iterator rbegin() const {
+    return reverse_iterator(tree_.get_end());
+  }
+  reverse_iterator rend() { return reverse_iterator(tree_.get_first()); }
+  const_reverse_iterator rend() const {
+    return reverse_iterator(tree_.get_first());
+  }
 
   //**************************************************
   // Capacity
@@ -110,33 +137,39 @@ class map {
 
   bool empty() const { return (size() == 0); }
   size_type size() const { return tree_.size(); }
-  size_type max_size() const {
-    return std::numeric_limits<difference_type>::max();
-  }
+  size_type max_size() const { return tree_.max_size(); }
 
   //**************************************************
   // Modifiers
   //**************************************************
 
   void clear() { tree_.clear(); }
+
   ft::pair<iterator, bool> insert(const value_type& value) {
     ft::pair<typename tree_type::node_type*, bool> tmp = tree_.insert(value);
     return ft::pair<iterator, bool>(iterator(tmp.first), tmp.second);
   }
+
   iterator insert(iterator pos, const value_type& value) {
     (void)pos;
     return iterator(tree_.insert(value).first);
   }
+
   template <class InputIt>
   void insert(InputIt first, InputIt last) {
     while (first != last) tree_.insert(*(first++));
   }
-  void erase(iterator pos) { tree_.erase(pos); }
+
+  void erase(iterator pos) { tree_.erase(*pos); }
 
   void erase(iterator first, iterator last) {
-    while (first != last) tree_.erase(first++);
+    while (first != last) tree_.erase(*(first++));
   }
-  size_type erase(const Key& key) { return tree_.erase(key); }
+
+  size_type erase(const Key& key) {
+    bool erased = tree_.erase(value_type(key, 0));
+    return erased;
+  }
 
   void swap(map& other) { tree_.swap(other.tree_); }
 
@@ -156,7 +189,7 @@ class map {
     return iterator(tree_.find(value_type(key, 0)));
   }
 
-  // const_iterator find(const Key& key) const {}
+  const_iterator find(const Key& key) const {}
   // ft::pair<iterator, iterator> equal_range(const Key& key) {}
   // ft::pair<const_iterator, const_iterator> equal_range(const Key& key) const
   // {} iterator lower_bound(const Key& key) {} const_iterator lower_bound(const
