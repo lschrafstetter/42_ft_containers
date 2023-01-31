@@ -35,7 +35,7 @@ class iterator_rbt {
   //**************************************************
 
   iterator_rbt &operator=(const iterator_rbt &other) {
-    this->node_ = other->node_;
+    this->node_ = other.node_;
     return *this;
   }
 
