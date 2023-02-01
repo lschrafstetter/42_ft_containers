@@ -98,11 +98,11 @@ class reverse_iterator {
   }
 
   // Access operators
-  reference operator*() const { return current[-1]; };
+  reference operator*() const { return (--Iterator(current)).operator*(); }
 
-  pointer operator->() const { return &(operator*()); };
+  pointer operator->() const { return &(operator*()); }
 
-  reference operator[](difference_type n) const { return current[-n - 1]; };
+  reference operator[](difference_type n) const { return *this->operator+(n); }
 
   // Arithmetic operators
   reverse_iterator& operator++() {
@@ -421,6 +421,7 @@ struct pair {
 
   first_type first;
   second_type second;
+
 };
 
 //**************************************************
