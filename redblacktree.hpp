@@ -151,9 +151,13 @@ class redblacktree {
    * @param pos pointer to the node(use the find member function to )
    */
   bool erase(value_type data) {
+    //std::cout << "Tree before erase:" << std::endl;
+    //printBT_(root_);
     node_type *node = find(data);
     if (!node->is_null_node) {
       delete_(node);
+      //std::cout << "Tree after erase:" << std::endl;
+      //printBT_(root_);
       return true;
     } else
       return false;
@@ -164,8 +168,7 @@ class redblacktree {
   size_type size() const { return size_; }
 
   void clear() {
-    if (!root_->is_null_node)
-      destroy_subtree_(root_);
+    if (!root_->is_null_node) destroy_subtree_(root_);
     root_ = off_the_end_;
     first_ = off_the_end_;
     last_ = off_the_end_;
@@ -311,12 +314,12 @@ class redblacktree {
     if (node == parent->left_child)
       sibling = parent->right_child;
     else
-      sibling = parent->right_child;
+      sibling = parent->left_child;
 
     if (sibling->color == BLACK) {
       if (has_red_child_(sibling)) {
         // Case 1: sibling is black and has a red child
-        node_type *red_child = get_red_child_(sibling);
+        node_type *red_child = get_outer_red_child_(sibling);
         sibling->color = parent->color;
         red_child->color = BLACK;
         node->color = BLACK;
@@ -333,9 +336,9 @@ class redblacktree {
     } else {
       // Case 3: sibling is red
       sibling->color = BLACK;
-      parent->color = BLACK;
-      rotate_(node);
-      resolve_doubleblack_(node, node->parent);
+      parent->color = RED;
+      rotate_(node, parent, sibling);
+      resolve_doubleblack_(node, parent);
     }
   }
 
@@ -348,11 +351,15 @@ class redblacktree {
     return node->left_child->color == RED || node->right_child->color == RED;
   }
 
-  node_type *get_red_child_(node_type *node) {
-    if (node->left_child->color == RED)
-      return node->left_child;
-    else
+  node_type *get_outer_red_child_(node_type *node) {
+    if (node->left_child->color == RED) {
+      if (node->right_child->color == RED && !is_left_child_(node))
+        return node->right_child;
+      else 
+        return node->left_child;
+    } else
       return node->right_child;
+      
   }
 
   /**
@@ -362,9 +369,9 @@ class redblacktree {
    * @return node_type* a pointer to the child that has taken the spot of node
    */
   node_type *remove_(node_type *node) {
-    if (node == last_) set_last_(get_inorder_successor_(node));
+    if (node == last_) set_last_(get_inorder_predecessor_(node));
 
-    if (node == first_) first_ = get_inorder_predecessor_(node);
+    if (node == first_) first_ = get_inorder_successor_(node);
 
     // get the node to replace the removed one with (when removing, there is at
     // most 1 non-null node!)
@@ -376,6 +383,8 @@ class redblacktree {
       tmp->parent = off_the_end_;
       destroy_node_(node);
       --size_;
+      //std::cout << "Tree after removal:" << std::endl;
+      //printBT_(root_);
       return tmp;
     }
 
@@ -388,6 +397,8 @@ class redblacktree {
     if (!tmp->is_null_node) tmp->parent = parent;
     destroy_node_(node);
     --size_;
+    //std::cout << "Tree after removal:" << std::endl;
+    //printBT_(root_);
     return tmp;
   }
 
@@ -464,9 +475,27 @@ class redblacktree {
       node_type *grandparent = parent->parent;
 
       if (insert_is_zick_zack_(node, parent)) {
-        // rearrange instead of swap!
-        std::swap(node->data, parent->data);
-        std::swap(parent->left_child, parent->right_child);
+        
+        if (is_left_child_(node))
+          node->right_child = parent;
+        else
+          node->left_child = parent;
+
+        if (is_left_child_(parent))
+          parent->parent->left_child = node;
+        else 
+          parent->parent->right_child = node;
+
+        node->parent = parent->parent;
+        parent->parent = node;
+        parent->left_child = off_the_end_;
+        parent->right_child = off_the_end_;
+
+        rebalance_insert_(parent);
+        return;
+
+        //std::swap(node->data, parent->data);
+        //std::swap(parent->left_child, parent->right_child);
       }
 
       node_type *uncle = get_sibling_(parent);
@@ -510,8 +539,7 @@ class redblacktree {
   void restructure_(node_type *a, node_type *b, node_type *c) {
     // relink the sibling of node to uncle
     node_type *sibling = get_sibling_(a);
-    if (!sibling->is_null_node)
-      sibling->parent = c;
+    if (!sibling->is_null_node) sibling->parent = c;
     if (is_left_child_(b))
       c->left_child = sibling;
     else
@@ -561,32 +589,31 @@ class redblacktree {
    *
    * @param node
    */
-  void rotate_(node_type *node) {
-    node_type *parent = node->parent;
-    node_type *new_child;
-    if (insert_is_zick_zack_(node->left_child, node))
-      new_child = node->right_child;
-    else
-      new_child = node->left_child;
-
-    if (is_left_child_(node))
-      parent->left_child = get_sibling_(new_child);
-    else
-      parent->right_child = get_sibling_(new_child);
-
-    // make node the child of grandgrandparent
+  void rotate_(node_type *node, node_type *parent, node_type *sibling) {
+    // make sibling new parent
     if (parent == root_) {
-      root_ = node;
-      node->parent = off_the_end_;
-    } else if (parent == parent->parent->left_child) {
-      parent->parent->left_child = node;
-      node->parent = parent->parent;
-    } else {
-      parent->parent->right_child = node;
-      node->parent = parent->parent;
+      sibling->parent = off_the_end_;
+      root_ = sibling;
     }
-    // make a and c the children of b
-    make_children_(node, parent, new_child);
+    else if (is_left_child_(parent)) {
+      parent->parent->left_child = sibling;
+      sibling->parent = parent->parent;
+    } else {
+      parent->parent->right_child = sibling;
+      sibling->parent = parent->parent;
+    }
+
+    if (is_left_child_(node)) {
+      parent->right_child = sibling->left_child;
+      sibling->left_child->parent = parent;
+      sibling->left_child = parent;
+      // keep right child
+    } else {
+      parent->left_child = sibling->right_child;
+      sibling->right_child->parent = parent;
+      sibling->right_child = parent;
+    }
+    parent->parent = sibling;
   }
 
   /**
@@ -614,6 +641,13 @@ class redblacktree {
    */
   bool insert_is_zick_zack_(node_type *node, node_type *parent) {
     return (is_left_child_(node) != is_left_child_(parent));
+  }
+
+  node_type *get_inward_child_(node_type *node) {
+    if (is_left_child_(node))
+      return node->right_child;
+    else
+      return node->left_child;
   }
 
   /**
@@ -659,16 +693,19 @@ class redblacktree {
     node = NULL;
   }
 
-  bool key_is_less_(const value_type &pair1, const value_type &pair2) const {
-    return cmp_(pair1, pair2);
+  bool key_is_less_(const value_type &element1,
+                    const value_type &element2) const {
+    return cmp_(element1, element2);
   }
 
-  bool key_is_greater_(const value_type &pair1, const value_type &pair2) const {
-    return cmp_(pair2, pair1);
+  bool key_is_greater_(const value_type &element1,
+                       const value_type &element2) const {
+    return cmp_(element2, element1);
   }
 
-  bool key_is_equal_(const value_type &pair1, const value_type &pair2) const {
-    return !cmp_(pair1, pair2) && !cmp_(pair2, pair1);
+  bool key_is_equal_(const value_type &element1,
+                     const value_type &element2) const {
+    return !cmp_(element1, element2) && !cmp_(element2, element1);
   }
 
   /**
@@ -709,7 +746,7 @@ class redblacktree {
     allocator_.deallocate(node, sizeof(node_type));
   }
 
-  /* void printBT_(const std::string &prefix, const node_type *node, bool
+  void printBT_(const std::string &prefix, const node_type *node, bool
   isLeft) { if (!node->is_null_node) { std::cout << prefix;
 
       std::cout << (isLeft ? "├──" : "└──");
@@ -717,10 +754,11 @@ class redblacktree {
       // print the value of the node
       std::cout << node->data.first << " ";
       if (node->color == BLACK)
-        std::cout << "b";
+        std::cout << "b ";
       else
-        std::cout << "r";
-      std::cout << (void *)node << " p: " << node->parent->data.first << " " << (void *)node->parent << std::endl;
+        std::cout << "r ";
+      std::cout << (void *)node << " p: " << node->parent->data.first << " " <<
+  (void *)node->parent << std::endl;
 
       // enter the next tree level - left and right branch
       printBT_(prefix + (isLeft ? "│   " : "    "), node->left_child, true);
@@ -728,7 +766,13 @@ class redblacktree {
     }
   }
 
-  void printBT_(const node_type *node) { printBT_("", node, false); } */
+  void printBT_(const node_type *node) { 
+    printBT_("", node, false);
+    std::cout << "off_the_end address: " << (void *)off_the_end_ << std::endl;
+    std::cout << "off_the_end parent: " << (void *)off_the_end_->parent << std::endl;
+    std::cout << "First: " << first_->data.first << ", " << (void *)first_ << std::endl;
+    std::cout << "Last: " << last_->data.first << ", " << (void *)last_ << std::endl;
+    }
 };
 
 }  // namespace ft
