@@ -99,6 +99,8 @@ class redblacktree {
    * pointer to the already existing duplicate and false
    */
   ft::pair<node_type *, bool> insert(const value_type &value) {
+    // std::cout << std::endl << "Tree before insertion of " << value.first <<
+    // std::endl << std::endl; printBT_(root_);
     // Case 1: first insertion. Make a new root.
     if (root_->is_null_node) {
       root_ = new_node_(value, off_the_end_);
@@ -120,6 +122,8 @@ class redblacktree {
       } else if (key_is_greater_(value, tmp->data)) {
         tmp = tmp->right_child;
       } else {
+        // std::cout << std::endl << "No insertion happened: " << std::endl <<
+        // std::endl; printBT_(root_);
         return ft::pair<node_type *, bool>(tmp, false);
       }
     }
@@ -142,6 +146,8 @@ class redblacktree {
     // Step 4: Rebalance tree
     rebalance_insert_(tmp);
 
+    // std::cout << std::endl << "Tree after insertion: " << std::endl <<
+    // std::endl; printBT_(root_);
     return ft::pair<node_type *, bool>(tmp, true);
   }
 
@@ -151,13 +157,13 @@ class redblacktree {
    * @param pos pointer to the node(use the find member function to )
    */
   bool erase(value_type data) {
-    //std::cout << "Tree before erase:" << std::endl;
-    //printBT_(root_);
+    // std::cout << "Tree before erase:" << std::endl;
+    // printBT_(root_);
     node_type *node = find(data);
     if (!node->is_null_node) {
       delete_(node);
-      //std::cout << "Tree after erase:" << std::endl;
-      //printBT_(root_);
+      // std::cout << "Tree after erase:" << std::endl;
+      // printBT_(root_);
       return true;
     } else
       return false;
@@ -355,11 +361,10 @@ class redblacktree {
     if (node->left_child->color == RED) {
       if (node->right_child->color == RED && !is_left_child_(node))
         return node->right_child;
-      else 
+      else
         return node->left_child;
     } else
       return node->right_child;
-      
   }
 
   /**
@@ -383,8 +388,8 @@ class redblacktree {
       tmp->parent = off_the_end_;
       destroy_node_(node);
       --size_;
-      //std::cout << "Tree after removal:" << std::endl;
-      //printBT_(root_);
+      // std::cout << "Tree after removal:" << std::endl;
+      // printBT_(root_);
       return tmp;
     }
 
@@ -397,8 +402,8 @@ class redblacktree {
     if (!tmp->is_null_node) tmp->parent = parent;
     destroy_node_(node);
     --size_;
-    //std::cout << "Tree after removal:" << std::endl;
-    //printBT_(root_);
+    // std::cout << "Tree after removal:" << std::endl;
+    // printBT_(root_);
     return tmp;
   }
 
@@ -475,27 +480,30 @@ class redblacktree {
       node_type *grandparent = parent->parent;
 
       if (insert_is_zick_zack_(node, parent)) {
-        
-        if (is_left_child_(node))
-          node->right_child = parent;
-        else
-          node->left_child = parent;
+        node_type *sibling = get_sibling_(node);
+        if (!sibling->is_null_node) {
+          rotate_(sibling, parent, node);
+          rebalance_insert_(sibling);
+          return;
+        } else {
+          if (is_left_child_(node))
+            node->right_child = parent;
+          else
+            node->left_child = parent;
 
-        if (is_left_child_(parent))
-          parent->parent->left_child = node;
-        else 
-          parent->parent->right_child = node;
+          if (is_left_child_(parent))
+            parent->parent->left_child = node;
+          else
+            parent->parent->right_child = node;
 
-        node->parent = parent->parent;
-        parent->parent = node;
-        parent->left_child = off_the_end_;
-        parent->right_child = off_the_end_;
+          node->parent = parent->parent;
+          parent->parent = node;
+          parent->left_child = off_the_end_;
+          parent->right_child = off_the_end_;
 
-        rebalance_insert_(parent);
-        return;
-
-        //std::swap(node->data, parent->data);
-        //std::swap(parent->left_child, parent->right_child);
+          rebalance_insert_(parent);
+          return;
+        }
       }
 
       node_type *uncle = get_sibling_(parent);
@@ -581,21 +589,18 @@ class redblacktree {
   }
 
   /**
-   * @brief rotates around node. It becomes its parents parent now. One child
-   * stays at node, the otehr one becomes the child of the former parent. Node
-   * has to be red (has a parent and has to have only black children). Similar
-   * to restructure_, but the a node has to be chosen first, because the node
-   * can have two children.
+   * @brief "pulls out" node, so that its sibling becomes nodes parents parent.
    *
    * @param node
+   * @param parent
+   * @param sibling
    */
   void rotate_(node_type *node, node_type *parent, node_type *sibling) {
     // make sibling new parent
     if (parent == root_) {
       sibling->parent = off_the_end_;
       root_ = sibling;
-    }
-    else if (is_left_child_(parent)) {
+    } else if (is_left_child_(parent)) {
       parent->parent->left_child = sibling;
       sibling->parent = parent->parent;
     } else {
@@ -746,8 +751,9 @@ class redblacktree {
     allocator_.deallocate(node, sizeof(node_type));
   }
 
-  void printBT_(const std::string &prefix, const node_type *node, bool
-  isLeft) { if (!node->is_null_node) { std::cout << prefix;
+  void printBT_(const std::string &prefix, const node_type *node, bool isLeft) {
+    if (!node->is_null_node) {
+      std::cout << prefix;
 
       std::cout << (isLeft ? "├──" : "└──");
 
@@ -757,8 +763,8 @@ class redblacktree {
         std::cout << "b ";
       else
         std::cout << "r ";
-      std::cout << (void *)node << " p: " << node->parent->data.first << " " <<
-  (void *)node->parent << std::endl;
+      std::cout << (void *)node << " p: " << node->parent->data.first << " "
+                << (void *)node->parent << std::endl;
 
       // enter the next tree level - left and right branch
       printBT_(prefix + (isLeft ? "│   " : "    "), node->left_child, true);
@@ -766,13 +772,16 @@ class redblacktree {
     }
   }
 
-  void printBT_(const node_type *node) { 
+  void printBT_(const node_type *node) {
     printBT_("", node, false);
     std::cout << "off_the_end address: " << (void *)off_the_end_ << std::endl;
-    std::cout << "off_the_end parent: " << (void *)off_the_end_->parent << std::endl;
-    std::cout << "First: " << first_->data.first << ", " << (void *)first_ << std::endl;
-    std::cout << "Last: " << last_->data.first << ", " << (void *)last_ << std::endl;
-    }
+    std::cout << "off_the_end parent: " << (void *)off_the_end_->parent
+              << std::endl;
+    std::cout << "First: " << first_->data.first << ", " << (void *)first_
+              << std::endl;
+    std::cout << "Last: " << last_->data.first << ", " << (void *)last_
+              << std::endl;
+  }
 };
 
 }  // namespace ft
