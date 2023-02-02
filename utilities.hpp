@@ -18,11 +18,11 @@
 #include <algorithm>
 #include <cstring>
 #include <exception>
+#include <functional>
 #include <limits>
 #include <memory>
 #include <stdexcept>
 #include <typeinfo>
-#include <functional>
 
 namespace ft {
 
@@ -401,8 +401,12 @@ struct pair {
   //**************************************************
 
   pair() : first(first_type()), second(second_type()) {}
+
   pair(const first_type& x, const second_type& y) : first(x), second(y) {}
-  pair(const pair& p) : first(p.first), second(p.second) {}
+
+  template<class U, class V>
+	pair (const pair<U,V>& other) : first(other.first), second(other.second) {}
+  //pair(const pair& p) : first(p.first), second(p.second) {}
 
   //**************************************************
   // Operator overloads
@@ -411,7 +415,7 @@ struct pair {
   // Assignment operator
   pair& operator=(const pair& other) {
     this->~pair();
-	  new (this) pair(other.first, other.second);
+    new (this) pair(other.first, other.second);
     return *this;
   };
 
@@ -421,7 +425,6 @@ struct pair {
 
   first_type first;
   second_type second;
-
 };
 
 //**************************************************
