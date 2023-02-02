@@ -43,7 +43,7 @@ class map {
   map() : tree_(value_compare(), allocator_type()) {}
 
   explicit map(const Compare& comp, const Allocator& alloc = Allocator())
-      : tree_(value_compare(), alloc) {}
+      : tree_(comp, alloc) {}
 
   template <class InputIt>
   map(InputIt first, InputIt last, const Compare& comp = Compare(),
@@ -190,6 +190,7 @@ class map {
   const_iterator find(const Key& key) const {
     return const_iterator(tree_.find(value_type(key, mapped_value())));
   }
+  
   // ft::pair<iterator, iterator> equal_range(const Key& key) {}
   // ft::pair<const_iterator, const_iterator> equal_range(const Key& key) const
   // {} iterator lower_bound(const Key& key) {} const_iterator lower_bound(const
