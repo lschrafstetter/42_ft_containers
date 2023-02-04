@@ -124,8 +124,6 @@ class vector {
    */
   void assign(size_type count, const T& value) {
     if (this->capacity() < count) {
-      if (count > max_size())
-        throw "assign count over max_size";
       this->~vector();
       start_ = allocate(count);
       finish_ = start_ + count;
