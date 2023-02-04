@@ -200,11 +200,11 @@ class map {
   ft::pair<const_iterator, const_iterator> equal_range(const Key& key) const {
     return ft::make_pair(lower_bound(key), upper_bound(key));
   }
-  iterator lower_bound(const Key& key){
-      return iterator(tree_.lower_bound(value_type(key, mapped_type())));
+  iterator lower_bound(const Key& key) {
+    return iterator(tree_.lower_bound(value_type(key, mapped_type())));
   }
   const_iterator lower_bound(const Key& key) const {
-      return const_iterator(tree_.lower_bound(value_type(key, mapped_type())));
+    return const_iterator(tree_.lower_bound(value_type(key, mapped_type())));
   }
   iterator upper_bound(const Key& key) {
     return iterator(tree_.upper_bound(value_type(key, mapped_type())));
