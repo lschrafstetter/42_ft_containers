@@ -914,14 +914,13 @@ void swap(ft::vector<T, Alloc>& lhs, ft::vector<T, Alloc>& rhs) {
 
 }  // namespace ft
 
-#include <vector>
-
 // std::swap specialization for ft::vector
 namespace std {
 template <class T, class Alloc>
 void swap(ft::vector<T, Alloc>& lhs, ft::vector<T, Alloc>& rhs) {
   lhs.swap(rhs);
 }
+
 }  // namespace std
 
 #endif  // VECTOR_H
