@@ -5,6 +5,35 @@
 
 namespace ft {
 
+enum node_color { RED, BLACK };
+
+template <class U>
+class rb_node {
+ public:
+  rb_node()
+      : data(U()),
+        parent(NULL),
+        left_child(NULL),
+        right_child(NULL),
+        color(RED),
+        is_null_node(true) {}
+
+  rb_node(const U &value)
+      : data(U(value)),
+        parent(NULL),
+        left_child(NULL),
+        right_child(NULL),
+        color(RED),
+        is_null_node(false) {}
+
+  U data;
+  rb_node *parent;
+  rb_node *left_child;
+  rb_node *right_child;
+  node_color color;
+  bool is_null_node;
+};
+
 template <class T, class Compare = std::less<T>,
           class Allocator = std::allocator<T> >
 class redblacktree {
@@ -13,9 +42,6 @@ class redblacktree {
   // Typedefs
   //**************************************************
 
-  enum node_color { RED, BLACK };
-  template <class U>
-  class rb_node;
   typedef Compare key_compare;
 
   typedef T value_type;
@@ -169,8 +195,6 @@ class redblacktree {
       return false;
   }
 
-  // size_type erase(const Key &key) {}
-
   size_type size() const { return size_; }
 
   void clear() {
@@ -211,6 +235,14 @@ class redblacktree {
     return current;
   }
 
+  node_type *lower_bound(const value_type &value) {
+    
+  }
+
+  node_type *upper_bound(const value_type &value) {
+
+  }
+
   /**
    * @brief Returns a pointer to the node with the lowest value or a pointer to
    * the off_the_end node if the tree is empty
@@ -231,36 +263,7 @@ class redblacktree {
 
   size_type max_size() const { return allocator_.max_size(); }
 
-  //**************************************************
-  // Member classes
-  //**************************************************
-
-  template <class U>
-  class rb_node {
-   public:
-    rb_node()
-        : data(U()),
-          parent(NULL),
-          left_child(NULL),
-          right_child(NULL),
-          color(RED),
-          is_null_node(true) {}
-
-    rb_node(const U &value)
-        : data(U(value)),
-          parent(NULL),
-          left_child(NULL),
-          right_child(NULL),
-          color(RED),
-          is_null_node(false) {}
-
-    U data;
-    rb_node *parent;
-    rb_node *left_child;
-    rb_node *right_child;
-    node_color color;
-    bool is_null_node;
-  };
+  allocator_type get_allocator() const { return allocator_; }
 
   //**************************************************
   // Private member objects
@@ -748,10 +751,10 @@ class redblacktree {
 
   void destroy_node_(node_type *node) {
     allocator_.destroy(node);
-    allocator_.deallocate(node, sizeof(node_type));
+    allocator_.deallocate(node, 1);
   }
 
-  void printBT_(const std::string &prefix, const node_type *node, bool isLeft) {
+  /* void printBT_(const std::string &prefix, const node_type *node, bool isLeft) {
     if (!node->is_null_node) {
       std::cout << prefix;
 
@@ -781,7 +784,7 @@ class redblacktree {
               << std::endl;
     std::cout << "Last: " << last_->data.first << ", " << (void *)last_
               << std::endl;
-  }
+  } */
 };
 
 }  // namespace ft
