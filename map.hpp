@@ -16,7 +16,7 @@ class map {
   //**************************************************
 
   typedef Key key_type;
-  typedef T mapped_value;
+  typedef T mapped_type;
   typedef ft::pair<const Key, T> value_type;
   typedef std::size_t size_type;
   typedef std::ptrdiff_t difference_type;
@@ -30,9 +30,8 @@ class map {
   class value_compare;
   typedef redblacktree<value_type, value_compare, allocator_type> tree_type;
 
-  typedef iterator_rbt<value_type, typename tree_type::node_type> iterator;
-  typedef iterator_rbt<const value_type, typename tree_type::node_type>
-      const_iterator;
+  typedef iterator_rbt<value_type, rb_node<value_type> > iterator;
+  typedef iterator_rbt<const value_type, rb_node<value_type> > const_iterator;
   typedef ft::reverse_iterator<iterator> reverse_iterator;
   typedef ft::reverse_iterator<const_iterator> const_reverse_iterator;
 
@@ -90,24 +89,28 @@ class map {
   // Member functions
   //**************************************************
 
-  allocator_type get_allocator() const {}
+  allocator_type get_allocator() const { return tree_.get_allocator(); }
 
   //**************************************************
   // Element access
   //**************************************************
 
-  mapped_value& at(const Key& key) {
+  mapped_type& at(const Key& key) {
     iterator ret = find(key);
     if (ret == end()) throw std::out_of_range("No element with key found");
     return (*ret).second;
   }
 
-  const mapped_value& at(const Key& key) const { return at(key); }
+  const mapped_type& at(const Key& key) const {
+    iterator ret = find(key);
+    if (ret == end()) throw std::out_of_range("No element with key found");
+    return (*ret).second;
+  }
 
-  mapped_value& operator[](const Key& key) {
+  mapped_type& operator[](const Key& key) {
     iterator ret = find(key);
     if (ret == end())
-      return (*(insert(value_type(key, mapped_value())).first)).second;
+      return (*(insert(value_type(key, mapped_type())).first)).second;
     else
       return (*ret).second;
   }
@@ -165,7 +168,7 @@ class map {
   }
 
   size_type erase(const Key& key) {
-    bool erased = tree_.erase(value_type(key, mapped_value()));
+    bool erased = tree_.erase(value_type(key, mapped_type()));
     return erased;
   }
 
@@ -177,20 +180,20 @@ class map {
 
   size_type count(const Key& key) const {
     (void)key;
-    iterator it1(tree_.find(value_type(key, mapped_value())));
+    iterator it1(tree_.find(value_type(key, mapped_type())));
     iterator it2(tree_.get_end());
     if (it1 == it2) return 0;
     return 1;
   }
 
   iterator find(const Key& key) {
-    return iterator(tree_.find(value_type(key, mapped_value())));
+    return iterator(tree_.find(value_type(key, mapped_type())));
   }
 
   const_iterator find(const Key& key) const {
-    return const_iterator(tree_.find(value_type(key, mapped_value())));
+    return const_iterator(tree_.find(value_type(key, mapped_type())));
   }
-  
+
   // ft::pair<iterator, iterator> equal_range(const Key& key) {}
   // ft::pair<const_iterator, const_iterator> equal_range(const Key& key) const
   // {} iterator lower_bound(const Key& key) {} const_iterator lower_bound(const
@@ -235,13 +238,13 @@ bool operator<(const ft::map<Key, T, Compare, Alloc>& lhs,
 
 template <class Key, class T, class Compare, class Alloc>
 bool operator>(const ft::map<Key, T, Compare, Alloc>& lhs,
-                const ft::map<Key, T, Compare, Alloc>& rhs) {
+               const ft::map<Key, T, Compare, Alloc>& rhs) {
   return !(lhs < rhs || lhs == rhs);
 }
 
 template <class Key, class T, class Compare, class Alloc>
 bool operator<=(const ft::map<Key, T, Compare, Alloc>& lhs,
-               const ft::map<Key, T, Compare, Alloc>& rhs) {
+                const ft::map<Key, T, Compare, Alloc>& rhs) {
   return !(lhs > rhs);
 }
 
