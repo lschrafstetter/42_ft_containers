@@ -235,12 +235,32 @@ class redblacktree {
     return current;
   }
 
-  node_type *lower_bound(const value_type &value) {
-    
+  node_type *lower_bound(const value_type &value) const {
+    node_type *node = root_;
+    node_type *result = off_the_end_;
+    while (!node->is_null_node) {
+      if (key_is_less_(node->data, value)) {
+        node = node->right_child;
+      } else {
+        result = node;
+        node = node->left_child;
+      }
+    }
+    return result;
   }
 
-  node_type *upper_bound(const value_type &value) {
-
+  node_type *upper_bound(const value_type &value) const {
+    node_type *node = root_;
+    node_type *result = off_the_end_;
+    while (!node->is_null_node) {
+      if (key_is_greater_(node->data, value)) {
+        result = node;
+        node = node->left_child;
+      } else {
+        node = node->right_child;
+      }
+    }
+    return result;
   }
 
   /**
@@ -754,9 +774,8 @@ class redblacktree {
     allocator_.deallocate(node, 1);
   }
 
-  /* void printBT_(const std::string &prefix, const node_type *node, bool isLeft) {
-    if (!node->is_null_node) {
-      std::cout << prefix;
+  /* void printBT_(const std::string &prefix, const node_type *node, bool
+  isLeft) { if (!node->is_null_node) { std::cout << prefix;
 
       std::cout << (isLeft ? "├──" : "└──");
 

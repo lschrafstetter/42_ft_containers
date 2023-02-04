@@ -102,7 +102,7 @@ class map {
   }
 
   const mapped_type& at(const Key& key) const {
-    iterator ret = find(key);
+    const_iterator ret = find(key);
     if (ret == end()) throw std::out_of_range("No element with key found");
     return (*ret).second;
   }
@@ -194,11 +194,24 @@ class map {
     return const_iterator(tree_.find(value_type(key, mapped_type())));
   }
 
-  // ft::pair<iterator, iterator> equal_range(const Key& key) {}
-  // ft::pair<const_iterator, const_iterator> equal_range(const Key& key) const
-  // {} iterator lower_bound(const Key& key) {} const_iterator lower_bound(const
-  // Key& key) const {} iterator upper_bound(const Key& key) {} const_iterator
-  // upper_bound(const Key& key) const {}
+  ft::pair<iterator, iterator> equal_range(const Key& key) {
+    return ft::make_pair(lower_bound(key), upper_bound(key));
+  }
+  ft::pair<const_iterator, const_iterator> equal_range(const Key& key) const {
+    return ft::make_pair(lower_bound(key), upper_bound(key));
+  }
+  iterator lower_bound(const Key& key){
+      return iterator(tree_.lower_bound(value_type(key, mapped_type())));
+  }
+  const_iterator lower_bound(const Key& key) const {
+      return const_iterator(tree_.lower_bound(value_type(key, mapped_type())));
+  }
+  iterator upper_bound(const Key& key) {
+    return iterator(tree_.upper_bound(value_type(key, mapped_type())));
+  }
+  const_iterator upper_bound(const Key& key) const {
+    return const_iterator(tree_.upper_bound(value_type(key, mapped_type())));
+  }
 
   //**************************************************
   // Observers
