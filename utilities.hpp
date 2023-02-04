@@ -226,6 +226,7 @@ struct integral_constant {
   static const T value = v;
   typedef T value_type;
   typedef integral_constant<T, v> type;
+  operator value_type() const { return value; }
 };
 
 template <class T, T v>
@@ -317,6 +318,16 @@ template <>
 struct is_integral<const volatile unsigned int> : public true_type {};
 template <>
 struct is_integral<const volatile unsigned long int> : public true_type {};
+// c++11 types. Uncomment to pass ft_containers-unit-test, but if you comment it
+// in, it won't compile with flag -std==c++98 anymore
+/* template <>
+struct is_integral<wchar_t> : public true_type {};
+template <>
+struct is_integral<char16_t> : public true_type {};
+template <>
+struct is_integral<long long> : public true_type {};
+template <>
+struct is_integral<unsigned long long> : public true_type {}; */
 
 //////////////////////////////////////////////////////////////////////////////
 // ft::equal
@@ -404,9 +415,8 @@ struct pair {
 
   pair(const first_type& x, const second_type& y) : first(x), second(y) {}
 
-  template<class U, class V>
-	pair (const pair<U,V>& other) : first(other.first), second(other.second) {}
-  //pair(const pair& p) : first(p.first), second(p.second) {}
+  template <class U, class V>
+  pair(const pair<U, V>& other) : first(other.first), second(other.second) {}
 
   //**************************************************
   // Operator overloads
