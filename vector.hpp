@@ -828,12 +828,12 @@ class vector {
 
   pointer allocate(size_t n) {
     if (n > max_size()) throw std::bad_alloc();
-    return static_cast<pointer>(allocator_.allocate(n * sizeof(value_type)));
+    return static_cast<pointer>(allocator_.allocate(n));
   }
 
   void deallocate_all() {
     if (start_) {
-      allocator_.deallocate(start_, (finish_ - start_) * sizeof(value_type));
+      allocator_.deallocate(start_, (finish_ - start_));
       start_ = NULL;
       end_of_storage_ = NULL;
       finish_ = NULL;
@@ -913,14 +913,12 @@ void swap(ft::vector<T, Alloc>& lhs, ft::vector<T, Alloc>& rhs) {
 } */
 
 }  // namespace ft
-
 // std::swap specialization for ft::vector
 namespace std {
 template <class T, class Alloc>
 void swap(ft::vector<T, Alloc>& lhs, ft::vector<T, Alloc>& rhs) {
   lhs.swap(rhs);
 }
-
 }  // namespace std
 
 #endif  // VECTOR_H
