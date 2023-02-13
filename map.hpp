@@ -267,6 +267,14 @@ bool operator>=(const ft::map<Key, T, Compare, Alloc>& lhs,
   return !(lhs < rhs);
 }
 
+// Uncomment this to pass the ft-containers-terminator tester even though we are
+// not supposed to implement an ft:swap function
+/* template <class Key, class T, class Compare, class Alloc>
+void swap(ft::map<Key, T, Compare, Alloc>& lhs,
+          ft::map<Key, T, Compare, Alloc>& rhs) {
+  lhs.swap(rhs);
+} */
+
 }  // namespace ft
 
 namespace std {
