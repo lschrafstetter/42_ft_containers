@@ -125,8 +125,6 @@ class redblacktree {
    * pointer to the already existing duplicate and false
    */
   ft::pair<node_type *, bool> insert(const value_type &value) {
-    // std::cout << std::endl << "Tree before insertion of " << value.first <<
-    // std::endl << std::endl; printBT_(root_);
     // Case 1: first insertion. Make a new root.
     if (root_->is_null_node) {
       root_ = new_node_(value, off_the_end_);
@@ -148,8 +146,6 @@ class redblacktree {
       } else if (key_is_greater_(value, tmp->data)) {
         tmp = tmp->right_child;
       } else {
-        // std::cout << std::endl << "No insertion happened: " << std::endl <<
-        // std::endl; printBT_(root_);
         return ft::pair<node_type *, bool>(tmp, false);
       }
     }
@@ -172,8 +168,6 @@ class redblacktree {
     // Step 4: Rebalance tree
     rebalance_insert_(tmp);
 
-    // std::cout << std::endl << "Tree after insertion: " << std::endl <<
-    // std::endl; printBT_(root_);
     return ft::pair<node_type *, bool>(tmp, true);
   }
 
@@ -183,13 +177,9 @@ class redblacktree {
    * @param pos pointer to the node(use the find member function to )
    */
   bool erase(value_type data) {
-    // std::cout << "Tree before erase:" << std::endl;
-    // printBT_(root_);
     node_type *node = find(data);
     if (!node->is_null_node) {
       delete_(node);
-      // std::cout << "Tree after erase:" << std::endl;
-      // printBT_(root_);
       return true;
     } else
       return false;
@@ -322,6 +312,15 @@ class redblacktree {
     }
   }
 
+  /**
+   * @brief rebelances the tree after deletion of a node
+   *
+   * @param node the replacement of the deleted node (can be NULL)
+   * @param parent the parent of the deleted node (not the parent of the
+   * replacement, since that can be NULL, so the parent would be last_)
+   * @param is_doubleblack whether or not the deletion caused a double-black
+   * marking of the replacement node
+   */
   void rebalance_delete_(node_type *node, node_type *parent,
                          bool is_doubleblack) {
     if (node->color == RED)
@@ -333,7 +332,12 @@ class redblacktree {
   /**
    * @brief resolves a doubleblack node after removal. Parent is there in the
    * case that node is a leaf. All leafs are a pointer to off_the_end, so there
-   * is no access to the right parent node
+   * is no access to the right parent node. For the algorithm, check
+   * https://www.youtube.com/watch?v=_c30ot0Kcis&t=1203s. The algorithm proposed
+   * there is not complete, since when you need to restructure nodes and the
+   * nodes are in a "zick-zack" formation (parent, then left child and right
+   * child or vice versa), you first need to rotate the nodes, so that they are
+   * not zick-zack anymore.
    *
    * @param node the replacement of the removed node (doubleblack)
    * @param parent the parent of the removed node
@@ -348,12 +352,51 @@ class redblacktree {
     if (sibling->color == BLACK) {
       if (has_red_child_(sibling)) {
         // Case 1: sibling is black and has a red child
+        // If there are two red children, get the outer one
         node_type *red_child = get_outer_red_child_(sibling);
-        sibling->color = parent->color;
-        red_child->color = BLACK;
-        node->color = BLACK;
-        parent->color = BLACK;
-        restructure_(red_child, sibling, parent);
+        if (insert_is_zick_zack_(red_child, sibling)) {
+          node_type *other_child = get_sibling_(red_child);
+          if (!other_child->is_null_node) {
+            rotate_(other_child, sibling, red_child);
+            red_child->color = parent->color;
+            sibling->color = BLACK;
+            parent->color = BLACK;
+            restructure_(sibling, red_child, parent);
+            return;
+          } else {
+            if (is_left_child_(red_child)) {
+              sibling->left_child = red_child->right_child;
+              if (!sibling->left_child->is_null_node)
+                sibling->left_child->parent = sibling;
+              red_child->right_child = sibling;
+            } else {
+              sibling->right_child = red_child->left_child;
+              if (!sibling->right_child->is_null_node)
+                sibling->right_child->parent = sibling;
+              red_child->left_child = sibling;
+            }
+
+            if (is_left_child_(sibling))
+              sibling->parent->left_child = red_child;
+            else
+              sibling->parent->right_child = red_child;
+
+            red_child->parent = sibling->parent;
+            sibling->parent = red_child;
+            sibling->color = parent->color;
+            red_child->color = parent->color;
+            sibling->color = BLACK;
+            parent->color = BLACK;
+            restructure_(sibling, red_child, parent);
+            return;
+          }
+        } else {
+          sibling->color = parent->color;
+          red_child->color = BLACK;
+          node->color = BLACK;
+          parent->color = BLACK;
+          restructure_(red_child, sibling, parent);
+        }
       } else {
         // Case 2: sibling is black and has no red child
         sibling->color = RED;
@@ -380,6 +423,15 @@ class redblacktree {
     return node->left_child->color == RED || node->right_child->color == RED;
   }
 
+  /**
+   * @brief Get the "outer" red child. Will be only used after it is clear that
+   * there is at least one red child. Will never be called on root, since in
+   * that edge case, both children are "outer" children.
+   *
+   * @param node the node to get the outer child from. Has to have at least one
+   * red child and can't be root.
+   * @return node_type* the outer red child
+   */
   node_type *get_outer_red_child_(node_type *node) {
     if (node->left_child->color == RED) {
       if (node->right_child->color == RED && !is_left_child_(node))
@@ -402,7 +454,7 @@ class redblacktree {
     if (node == first_) first_ = get_inorder_successor_(node);
 
     // get the node to replace the removed one with (when removing, there is at
-    // most 1 non-null node!)
+    // most 1 non-null node, since that is checked in a higher-level function)
     node_type *tmp = get_child_(node);
 
     // if node is the root, it's easy:
@@ -411,8 +463,6 @@ class redblacktree {
       tmp->parent = off_the_end_;
       destroy_node_(node);
       --size_;
-      // std::cout << "Tree after removal:" << std::endl;
-      // printBT_(root_);
       return tmp;
     }
 
@@ -425,11 +475,16 @@ class redblacktree {
     if (!tmp->is_null_node) tmp->parent = parent;
     destroy_node_(node);
     --size_;
-    // std::cout << "Tree after removal:" << std::endl;
-    // printBT_(root_);
     return tmp;
   }
 
+  /**
+   * @brief Get the inorder successor of a node or the off_the_end_ node if the
+   * node is last_
+   *
+   * @param node the node to get the successor of
+   * @return node_type* the successor
+   */
   node_type *get_inorder_successor_(node_type *node) {
     if (!node->right_child->is_null_node)
       return min_value_(node->right_child);
@@ -443,6 +498,13 @@ class redblacktree {
     }
   }
 
+  /**
+   * @brief Get the inorder predecessor of a node or the off_the_end_ node if
+   * the node is first_
+   *
+   * @param node the node to get the predecessor of
+   * @return node_type* the predecessor
+   */
   node_type *get_inorder_predecessor_(node_type *node) {
     if (!node->left_child->is_null_node)
       return max_value_(node->left_child);
@@ -456,12 +518,24 @@ class redblacktree {
     }
   }
 
+  /**
+   * @brief gets the node with the minimal value of a subtree
+   *
+   * @param node the root of the subtree
+   * @return node_type* the node with the minimal value
+   */
   node_type *min_value_(node_type *node) const {
     node_type *current = node;
     while (!current->left_child->is_null_node) current = current->left_child;
     return current;
   }
 
+  /**
+   * @brief gets the node with the greatest value of a subtree
+   *
+   * @param node the root of the subtree
+   * @return node_type* the node with the greatest value
+   */
   node_type *max_value_(node_type *node) const {
     node_type *current = node;
     while (!current->right_child->is_null_node) current = current->right_child;
@@ -489,7 +563,8 @@ class redblacktree {
   /**
    * @brief recursively rebalances the tree after the insertion. If the new
    * node is the root node, colors it black. Otherwise, it checks for a
-   * double-red property violation and rebalances the tree
+   * double-red property violation and rebalances the tree. Check this video for
+   * the algorithm: https://www.youtube.com/watch?v=JwgeECkckRo
    *
    * @param node the newly inserted node
    */
@@ -506,13 +581,22 @@ class redblacktree {
         node_type *sibling = get_sibling_(node);
         if (!sibling->is_null_node) {
           rotate_(sibling, parent, node);
-          rebalance_insert_(sibling);
+          rebalance_insert_(parent);
           return;
         } else {
-          if (is_left_child_(node))
+          if (is_left_child_(node)) {
+            parent->left_child = node->right_child;
+            if (!parent->left_child->is_null_node)
+              parent->left_child->parent = parent;
+            parent->right_child = off_the_end_;
             node->right_child = parent;
-          else
+          } else {
+            parent->right_child = node->left_child;
+            if (!parent->right_child->is_null_node)
+              parent->right_child->parent = parent;
+            parent->left_child = off_the_end_;
             node->left_child = parent;
+          }
 
           if (is_left_child_(parent))
             parent->parent->left_child = node;
@@ -521,8 +605,6 @@ class redblacktree {
 
           node->parent = parent->parent;
           parent->parent = node;
-          parent->left_child = off_the_end_;
-          parent->right_child = off_the_end_;
 
           rebalance_insert_(parent);
           return;
@@ -631,14 +713,15 @@ class redblacktree {
       sibling->parent = parent->parent;
     }
 
-    if (is_left_child_(node)) {
+    if (parent->left_child == node) {  // changed
       parent->right_child = sibling->left_child;
-      sibling->left_child->parent = parent;
+      if (!sibling->left_child->is_null_node)
+        sibling->left_child->parent = parent;
       sibling->left_child = parent;
-      // keep right child
     } else {
       parent->left_child = sibling->right_child;
-      sibling->right_child->parent = parent;
+      if (!sibling->right_child->is_null_node)
+        sibling->right_child->parent = parent;
       sibling->right_child = parent;
     }
     parent->parent = sibling;
@@ -671,6 +754,12 @@ class redblacktree {
     return (is_left_child_(node) != is_left_child_(parent));
   }
 
+  /**
+   * @brief Get the inward child of a node. Will never be called on root.
+   * 
+   * @param node the node to get the child from
+   * @return node_type* the inward child
+   */
   node_type *get_inward_child_(node_type *node) {
     if (is_left_child_(node))
       return node->right_child;
@@ -711,7 +800,7 @@ class redblacktree {
   /**
    * @brief recursively destroys a tree
    *
-   * @param node
+   * @param node root of the tree
    */
   void destroy_subtree_(node_type *node) {
     if (node->is_null_node) return;
@@ -773,37 +862,6 @@ class redblacktree {
     allocator_.destroy(node);
     allocator_.deallocate(node, 1);
   }
-
-  /* void printBT_(const std::string &prefix, const node_type *node, bool
-  isLeft) { if (!node->is_null_node) { std::cout << prefix;
-
-      std::cout << (isLeft ? "├──" : "└──");
-
-      // print the value of the node
-      std::cout << node->data.first << " ";
-      if (node->color == BLACK)
-        std::cout << "b ";
-      else
-        std::cout << "r ";
-      std::cout << (void *)node << " p: " << node->parent->data.first << " "
-                << (void *)node->parent << std::endl;
-
-      // enter the next tree level - left and right branch
-      printBT_(prefix + (isLeft ? "│   " : "    "), node->left_child, true);
-      printBT_(prefix + (isLeft ? "│   " : "    "), node->right_child, false);
-    }
-  }
-
-  void printBT_(const node_type *node) {
-    printBT_("", node, false);
-    std::cout << "off_the_end address: " << (void *)off_the_end_ << std::endl;
-    std::cout << "off_the_end parent: " << (void *)off_the_end_->parent
-              << std::endl;
-    std::cout << "First: " << first_->data.first << ", " << (void *)first_
-              << std::endl;
-    std::cout << "Last: " << last_->data.first << ", " << (void *)last_
-              << std::endl;
-  } */
 };
 
 }  // namespace ft
