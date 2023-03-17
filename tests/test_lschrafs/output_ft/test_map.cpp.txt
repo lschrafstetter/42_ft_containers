@@ -1,0 +1,32 @@
+[33mMAP TESTS:
+Normal constructor:
+Size: 1000, Hash: 39483
+Range constructor:
+Size: 500, Hash: 20924
+Copy constructor:
+Size: 500, Hash: 20924
+Copy assignment operator:
+Size: 1000, Hash: 39483
+map::operator[]
+1682007530
+1682007531
+map::at()
+1682007531
+map::begin()
+4344352
+688590199
+688359621
+688590199
+688590199
+693014654
+688590199
+2139613154
+2139613155
+2139613154
+2139613154
+2136452091
+2139613154
+4344352
+Size: 5, Hash: 44313
+Size: 5, Hash: 44313
+Size: 4, Hash: 9763
