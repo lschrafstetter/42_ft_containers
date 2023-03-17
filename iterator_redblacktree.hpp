@@ -91,6 +91,10 @@ class iterator_rbt {
 
  private:
   void inorder_successor_() {
+    if (node_->is_null_node) {
+      node_ = min_value_(node_->parent);
+      return;
+    }
     if (!node_->right_child->is_null_node)
       node_ = min_value_(node_->right_child);
     else {
