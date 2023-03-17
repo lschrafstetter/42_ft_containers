@@ -1,0 +1,12 @@
+Less or Equal (file: tests/map/comparisons_le.cpp, line: 25)
+Less or Equal.. (file: tests/map/comparisons_le.cpp, line: 43)
+Less or Equal... (file: tests/map/comparisons_le.cpp, line: 52)
+Less or Equal.... (file: tests/map/comparisons_le.cpp, line: 61)
+Less or Equal..... (file: tests/map/comparisons_le.cpp, line: 76)
+Less or Equal...... (file: tests/map/comparisons_le.cpp, line: 87)
+========================================
+No leak detected
+========================================
+========================================
+Every objects destroyed
+========================================

@@ -1,0 +1,27 @@
+Size: 64 (file: tests/map/index_operator.cpp, line: 22)
+Value:  (file: tests/map/index_operator.cpp, line: 23)
+Size: 65 (file: tests/map/index_operator.cpp, line: 24)
+Size: 65 (file: tests/map/index_operator.cpp, line: 28)
+Value: Hello (file: tests/map/index_operator.cpp, line: 29)
+Size: 65 (file: tests/map/index_operator.cpp, line: 30)
+Size: 65 (file: tests/map/index_operator.cpp, line: 32)
+Value:  (file: tests/map/index_operator.cpp, line: 33)
+Size: 66 (file: tests/map/index_operator.cpp, line: 34)
+Size: 66 (file: tests/map/index_operator.cpp, line: 38)
+Value: ABCDEF (file: tests/map/index_operator.cpp, line: 39)
+Size: 66 (file: tests/map/index_operator.cpp, line: 40)
+Size: 32 (file: tests/map/index_operator.cpp, line: 46)
+Value:  (file: tests/map/index_operator.cpp, line: 47)
+Size: 33 (file: tests/map/index_operator.cpp, line: 48)
+Size: 33 (file: tests/map/index_operator.cpp, line: 52)
+Value: World (file: tests/map/index_operator.cpp, line: 53)
+Size: 33 (file: tests/map/index_operator.cpp, line: 54)
+Size: 34 (file: tests/map/index_operator.cpp, line: 58)
+Value: World (file: tests/map/index_operator.cpp, line: 59)
+Size: 34 (file: tests/map/index_operator.cpp, line: 60)
+========================================
+No leak detected
+========================================
+========================================
+Every objects destroyed
+========================================

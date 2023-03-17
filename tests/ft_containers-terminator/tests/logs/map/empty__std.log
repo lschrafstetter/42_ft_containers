@@ -1,0 +1,10 @@
+Empty: true (file: tests/map/empty.cpp, line: 22)
+Empty: false (file: tests/map/empty.cpp, line: 26)
+Empty: true (file: tests/map/empty.cpp, line: 30)
+Empty: false (file: tests/map/empty.cpp, line: 36)
+========================================
+No leak detected
+========================================
+========================================
+Every objects destroyed
+========================================

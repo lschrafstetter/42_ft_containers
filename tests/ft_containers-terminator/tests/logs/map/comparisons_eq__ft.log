@@ -1,0 +1,9 @@
+Equal (file: tests/map/comparisons_eq.cpp, line: 24)
+Equal... (file: tests/map/comparisons_eq.cpp, line: 51)
+Equal.... (file: tests/map/comparisons_eq.cpp, line: 60)
+========================================
+No leak detected
+========================================
+========================================
+Every objects destroyed
+========================================

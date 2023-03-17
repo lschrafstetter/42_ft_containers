@@ -1,0 +1,158 @@
+Erased?: 0 (file: tests/map/erase_key.cpp, line: 24)
+Erased?: 0 (file: tests/map/erase_key.cpp, line: 32)
+Erased?: 0 (file: tests/map/erase_key.cpp, line: 49)
+Size: 10 (file: tests/map/erase_key.cpp, line: 50)
+
+Map content:
+K: -23 V: sdffgdfgrefet34thfgheewt K: -22 V: dfhkihgbnfbcx5reterjhd K: 0 V: 98y4rtuohwidsjusdossefsse K: 1 V: asdssdfdfdffffff K: 2 V: dsfdffffdfdfdsdfdffa K: 3 V: sssdfs K: 23 V: 23n K: 25 V: asdasdfsdfsafdsf K: 30 V: sefsadfasdfasdfsadfasdfsf K: 75 V: dfse 
+
+Erased?: 1 (file: tests/map/erase_key.cpp, line: 54)
+Size: 9 (file: tests/map/erase_key.cpp, line: 55)
+
+Map content:
+K: -23 V: sdffgdfgrefet34thfgheewt K: -22 V: dfhkihgbnfbcx5reterjhd K: 1 V: asdssdfdfdffffff K: 2 V: dsfdffffdfdfdsdfdffa K: 3 V: sssdfs K: 23 V: 23n K: 25 V: asdasdfsdfsafdsf K: 30 V: sefsadfasdfasdfsadfasdfsf K: 75 V: dfse 
+
+Erased?: 1 (file: tests/map/erase_key.cpp, line: 59)
+Size: 8 (file: tests/map/erase_key.cpp, line: 60)
+
+Map content:
+K: -23 V: sdffgdfgrefet34thfgheewt K: -22 V: dfhkihgbnfbcx5reterjhd K: 1 V: asdssdfdfdffffff K: 2 V: dsfdffffdfdfdsdfdffa K: 3 V: sssdfs K: 23 V: 23n K: 25 V: asdasdfsdfsafdsf K: 30 V: sefsadfasdfasdfsadfasdfsf 
+
+Erased?: 1 (file: tests/map/erase_key.cpp, line: 64)
+Size: 7 (file: tests/map/erase_key.cpp, line: 65)
+
+Map content:
+K: -23 V: sdffgdfgrefet34thfgheewt K: -22 V: dfhkihgbnfbcx5reterjhd K: 2 V: dsfdffffdfdfdsdfdffa K: 3 V: sssdfs K: 23 V: 23n K: 25 V: asdasdfsdfsafdsf K: 30 V: sefsadfasdfasdfsadfasdfsf 
+
+Erased?: 1 (file: tests/map/erase_key.cpp, line: 69)
+Size: 6 (file: tests/map/erase_key.cpp, line: 70)
+
+Map content:
+K: -23 V: sdffgdfgrefet34thfgheewt K: -22 V: dfhkihgbnfbcx5reterjhd K: 3 V: sssdfs K: 23 V: 23n K: 25 V: asdasdfsdfsafdsf K: 30 V: sefsadfasdfasdfsadfasdfsf 
+
+Erased?: 1 (file: tests/map/erase_key.cpp, line: 74)
+Size: 5 (file: tests/map/erase_key.cpp, line: 75)
+
+Map content:
+K: -23 V: sdffgdfgrefet34thfgheewt K: -22 V: dfhkihgbnfbcx5reterjhd K: 23 V: 23n K: 25 V: asdasdfsdfsafdsf K: 30 V: sefsadfasdfasdfsadfasdfsf 
+
+Erased?: 1 (file: tests/map/erase_key.cpp, line: 79)
+Size: 4 (file: tests/map/erase_key.cpp, line: 80)
+
+Map content:
+K: -23 V: sdffgdfgrefet34thfgheewt K: -22 V: dfhkihgbnfbcx5reterjhd K: 25 V: asdasdfsdfsafdsf K: 30 V: sefsadfasdfasdfsadfasdfsf 
+
+Erased?: 0 (file: tests/map/erase_key.cpp, line: 84)
+Size: 4 (file: tests/map/erase_key.cpp, line: 85)
+
+Map content:
+K: -23 V: sdffgdfgrefet34thfgheewt K: -22 V: dfhkihgbnfbcx5reterjhd K: 25 V: asdasdfsdfsafdsf K: 30 V: sefsadfasdfasdfsadfasdfsf 
+
+Erased?: 1 (file: tests/map/erase_key.cpp, line: 89)
+Size: 3 (file: tests/map/erase_key.cpp, line: 90)
+
+Map content:
+K: -23 V: sdffgdfgrefet34thfgheewt K: -22 V: dfhkihgbnfbcx5reterjhd K: 25 V: asdasdfsdfsafdsf 
+
+Erased?: 1 (file: tests/map/erase_key.cpp, line: 94)
+Size: 2 (file: tests/map/erase_key.cpp, line: 95)
+
+Map content:
+K: -23 V: sdffgdfgrefet34thfgheewt K: 25 V: asdasdfsdfsafdsf 
+
+Erased?: 1 (file: tests/map/erase_key.cpp, line: 99)
+Size: 1 (file: tests/map/erase_key.cpp, line: 100)
+
+Map content:
+K: 25 V: asdasdfsdfsafdsf 
+
+Erased?: 0 (file: tests/map/erase_key.cpp, line: 104)
+Size: 1 (file: tests/map/erase_key.cpp, line: 105)
+
+Map content:
+K: 25 V: asdasdfsdfsafdsf 
+
+Erased?: 1 (file: tests/map/erase_key.cpp, line: 109)
+Size: 0 (file: tests/map/erase_key.cpp, line: 110)
+
+Map content:
+
+
+Erased?: 0 (file: tests/map/erase_key.cpp, line: 114)
+Size: 0 (file: tests/map/erase_key.cpp, line: 115)
+
+Map content:
+
+
+Erased?: 0 (file: tests/map/erase_key.cpp, line: 119)
+Size: 0 (file: tests/map/erase_key.cpp, line: 120)
+
+Map content:
+
+
+Erased?: 0 (file: tests/map/erase_key.cpp, line: 127)
+Size: 0 (file: tests/map/erase_key.cpp, line: 128)
+
+Map content:
+
+
+Erased?: 0 (file: tests/map/erase_key.cpp, line: 141)
+Size: 6 (file: tests/map/erase_key.cpp, line: 142)
+
+Map content:
+K:  V:  K: 0 V: 2345456456456456 K: 000000000000000000000000 V: 1111111111111111111111111111 K: 123 V: kjhgfdsdffghsfghdfgh K: 1234 V: gfdsadgg K: 123456789123456789123456789 V: 49857459898674568464 
+
+Erased?: 1 (file: tests/map/erase_key.cpp, line: 146)
+Size: 5 (file: tests/map/erase_key.cpp, line: 147)
+
+Map content:
+K:  V:  K: 0 V: 2345456456456456 K: 000000000000000000000000 V: 1111111111111111111111111111 K: 1234 V: gfdsadgg K: 123456789123456789123456789 V: 49857459898674568464 
+
+Erased?: 0 (file: tests/map/erase_key.cpp, line: 151)
+Size: 5 (file: tests/map/erase_key.cpp, line: 152)
+
+Map content:
+K:  V:  K: 0 V: 2345456456456456 K: 000000000000000000000000 V: 1111111111111111111111111111 K: 1234 V: gfdsadgg K: 123456789123456789123456789 V: 49857459898674568464 
+
+Erased?: 1 (file: tests/map/erase_key.cpp, line: 156)
+Size: 4 (file: tests/map/erase_key.cpp, line: 157)
+
+Map content:
+K: 0 V: 2345456456456456 K: 000000000000000000000000 V: 1111111111111111111111111111 K: 1234 V: gfdsadgg K: 123456789123456789123456789 V: 49857459898674568464 
+
+Erased?: 1 (file: tests/map/erase_key.cpp, line: 161)
+Size: 3 (file: tests/map/erase_key.cpp, line: 162)
+
+Map content:
+K: 0 V: 2345456456456456 K: 000000000000000000000000 V: 1111111111111111111111111111 K: 123456789123456789123456789 V: 49857459898674568464 
+
+Erased?: 1 (file: tests/map/erase_key.cpp, line: 166)
+Size: 2 (file: tests/map/erase_key.cpp, line: 167)
+
+Map content:
+K: 0 V: 2345456456456456 K: 000000000000000000000000 V: 1111111111111111111111111111 
+
+Erased?: 1 (file: tests/map/erase_key.cpp, line: 171)
+Size: 1 (file: tests/map/erase_key.cpp, line: 172)
+
+Map content:
+K: 0 V: 2345456456456456 
+
+Erased?: 1 (file: tests/map/erase_key.cpp, line: 176)
+Size: 0 (file: tests/map/erase_key.cpp, line: 177)
+
+Map content:
+
+
+Erased?: 0 (file: tests/map/erase_key.cpp, line: 181)
+Size: 0 (file: tests/map/erase_key.cpp, line: 182)
+
+Map content:
+
+
+========================================
+No leak detected
+========================================
+========================================
+Every objects destroyed
+========================================

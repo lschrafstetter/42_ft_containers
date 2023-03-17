@@ -1,0 +1,16 @@
+Not Less (file: tests/map/value_comp.cpp, line: 29)
+Not Less (file: tests/map/value_comp.cpp, line: 38)
+Not Less (file: tests/map/value_comp.cpp, line: 47)
+Less (file: tests/map/value_comp.cpp, line: 54)
+Less (file: tests/map/value_comp.cpp, line: 63)
+Not Less (file: tests/map/value_comp.cpp, line: 79)
+Not Less (file: tests/map/value_comp.cpp, line: 88)
+Not Less (file: tests/map/value_comp.cpp, line: 97)
+Less (file: tests/map/value_comp.cpp, line: 104)
+Less (file: tests/map/value_comp.cpp, line: 113)
+========================================
+No leak detected
+========================================
+========================================
+Every objects destroyed
+========================================

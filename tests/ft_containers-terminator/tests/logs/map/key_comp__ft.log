@@ -1,0 +1,16 @@
+Not Less (file: tests/map/key_comp.cpp, line: 30)
+Not Less (file: tests/map/key_comp.cpp, line: 39)
+Not Less (file: tests/map/key_comp.cpp, line: 48)
+Less (file: tests/map/key_comp.cpp, line: 55)
+Less (file: tests/map/key_comp.cpp, line: 64)
+Not Less (file: tests/map/key_comp.cpp, line: 82)
+Not Less (file: tests/map/key_comp.cpp, line: 91)
+Not Less (file: tests/map/key_comp.cpp, line: 100)
+Less (file: tests/map/key_comp.cpp, line: 107)
+Less (file: tests/map/key_comp.cpp, line: 116)
+========================================
+No leak detected
+========================================
+========================================
+Every objects destroyed
+========================================
