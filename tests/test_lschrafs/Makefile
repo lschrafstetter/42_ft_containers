@@ -16,7 +16,7 @@ SRCS = $(addprefix $(SRCS_PATH), $(SRCS_NAMES))
 
 all: $(SRCS_NAMES)
 
-$(SRCS_NAMES):
+$(SRCS_NAMES): FORCE
 	@echo Testing $@: 
 
 	@$(COMPILER) $(CFLAGS) $(addprefix $(SRCS_PATH), $@) -DTESTSTD=1 -o std
