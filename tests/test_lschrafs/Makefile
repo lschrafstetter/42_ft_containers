@@ -9,8 +9,8 @@ FTOUTPUT_PATH		=		./output_ft/
 
 SRCS_NAMES	=		test_vector.cpp \
 								test_map.cpp \
-#test_stack.cpp \
-#test_set.cpp
+								test_stack.cpp \
+								test_set.cpp \
 
 SRCS = $(addprefix $(SRCS_PATH), $(SRCS_NAMES))
 

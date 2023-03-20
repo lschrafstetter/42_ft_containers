@@ -1,17 +1,18 @@
 #include "include.hpp"
 
 template <class T, class U>
-static void print_map(NAMESPACE::map<T, U> map) {
+static void print_map(NAMESPACE::map<T, U> &map) {
   if (map.empty())
     return;
   size_t hash = 0;
   typename NAMESPACE::map<T, U>::iterator start = map.begin();
   typename NAMESPACE::map<T, U>::iterator end = map.end();
 
-  while (start++ != end) {
+  while (start != end) {
     hash += (int16_t)((*start).second);
     hash *= 13;
     hash %= 65536;
+    start++;
   }
 
   std::cout << "Size: " << map.size() << ", Hash: " << hash << std::endl;
@@ -114,6 +115,9 @@ void test_map() {
     int tmp = rand();
     map5.insert(NAMESPACE::make_pair(tmp, tmp));
   }
+
+  print_map(map5);
+  
   map5.erase(map5.begin(), map5.end());
 }
 

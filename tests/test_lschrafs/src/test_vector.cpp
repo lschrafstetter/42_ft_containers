@@ -1,7 +1,7 @@
 #include "include.hpp"
 
 template <class T>
-static void print_vector(NAMESPACE::vector<T> vec) {
+static void print_vector(NAMESPACE::vector<T> &vec) {
   size_t hash = 0;
   size_t size = vec.size();
   for (size_t i = 0; i < size; ++i) {
@@ -120,13 +120,16 @@ void test_vector() {
   // Performance
   //**************************************************
 
-  NAMESPACE::vector<int> performancevector;
+  NAMESPACE::vector<int> vec5;
   for (int i = 0; i < 100000; ++i) {
-    performancevector.push_back(i);
-    performancevector.insert(performancevector.begin(), i);
+    vec5.push_back(i);
+    vec5.insert(vec5.begin(), i);
   }
-  while (!performancevector.empty()) {
-    performancevector.pop_back();
+
+  print_vector(vec5);
+
+  while (!vec5.empty()) {
+    vec5.pop_back();
   }
 }
 
