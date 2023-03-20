@@ -1,9 +1,0 @@
-Less.. (file: tests/map/comparisons_lt.cpp, line: 42)
-Less..... (file: tests/map/comparisons_lt.cpp, line: 75)
-Less...... (file: tests/map/comparisons_lt.cpp, line: 86)
-========================================
-No leak detected
-========================================
-========================================
-Every objects destroyed
-========================================

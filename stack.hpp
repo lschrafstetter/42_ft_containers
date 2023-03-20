@@ -47,9 +47,38 @@ class stack {
   void pop() { c.pop_back(); }
 
   //**************************************************
+  // Friend-declarations for non-members
+  //**************************************************
+
+  template <class T_, class Container_>
+  friend bool operator==(const ft::stack<T_, Container_>& lhs,
+                         const ft::stack<T_, Container_>& rhs);
+
+  template <class T_, class Container_>
+  friend bool operator!=(const ft::stack<T_, Container_>& lhs,
+                         const ft::stack<T_, Container_>& rhs);
+
+  template <class T_, class Container_>
+  friend bool operator<(const ft::stack<T_, Container_>& lhs,
+                        const ft::stack<T_, Container_>& rhs);
+
+  template <class T_, class Container_>
+  friend bool operator<=(const ft::stack<T_, Container_>& lhs,
+                         const ft::stack<T_, Container_>& rhs);
+
+  template <class T_, class Container_>
+  friend bool operator>(const ft::stack<T_, Container_>& lhs,
+                        const ft::stack<T_, Container_>& rhs);
+
+  template <class T_, class Container_>
+  friend bool operator>=(const ft::stack<T_, Container_>& lhs,
+                         const ft::stack<T_, Container_>& rhs);
+
+  //**************************************************
   // Member objects
   //**************************************************
 
+ protected:
   container_type c;
 };
 
